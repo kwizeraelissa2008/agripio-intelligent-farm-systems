@@ -13,6 +13,8 @@ import IoTDevices from "./pages/IoTDevices";
 import VisionSystem from "./pages/VisionSystem";
 import MarketIntel from "./pages/MarketIntel";
 import Analytics from "./pages/Analytics";
+import News from "./pages/News";
+import NewsDetail from "./pages/NewsDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +32,8 @@ function AppRoutes() {
       <Route path="/dashboard/vision" element={isAuthenticated ? <VisionSystem /> : <Navigate to="/onboarding" />} />
       <Route path="/dashboard/market-intel" element={isAuthenticated ? <MarketIntel /> : <Navigate to="/onboarding" />} />
       <Route path="/dashboard/analytics" element={isAuthenticated ? <Analytics /> : <Navigate to="/onboarding" />} />
+      <Route path="/dashboard/news" element={isAuthenticated ? <News /> : <Navigate to="/onboarding" />} />
+      <Route path="/dashboard/news/:id" element={isAuthenticated ? <NewsDetail /> : <Navigate to="/onboarding" />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

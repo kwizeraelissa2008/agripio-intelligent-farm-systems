@@ -57,6 +57,7 @@ export const translations = {
     visionAI: 'Vision AI',
     marketIntel: 'Market Intel',
     analytics: 'Analytics',
+    news: 'Agri News',
     notifications: 'Notifications',
     settings: 'Settings',
     
@@ -183,6 +184,7 @@ export const translations = {
     visionAI: 'AI yo Kureba',
     marketIntel: 'Ubushakashatsi bw\'Isoko',
     analytics: 'Isesengura',
+    news: 'Amakuru y\'Ubuhinzi',
     notifications: 'Imenyesha',
     settings: 'Igenamiterere',
     

@@ -4,7 +4,7 @@ import { useApp } from '@/contexts/AppContext';
 import {
   Leaf, LayoutDashboard, ShoppingBag, Cpu, Eye, BarChart3,
   TrendingUp, Bell, Settings, Menu, X, ChevronRight,
-  Mic, Globe, LogOut, User
+  Mic, Globe, LogOut, User, Newspaper
 } from 'lucide-react';
 import VoiceAssistant from './VoiceAssistant';
 import NotificationPanel from './NotificationPanel';
@@ -17,6 +17,7 @@ const navItems = [
   { path: '/dashboard/vision', icon: Eye, label: 'visionAI' },
   { path: '/dashboard/market-intel', icon: TrendingUp, label: 'marketIntel' },
   { path: '/dashboard/analytics', icon: BarChart3, label: 'analytics' },
+  { path: '/dashboard/news', icon: Newspaper, label: 'news' },
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
