@@ -8,38 +8,38 @@ import {
 } from 'lucide-react';
 
 const soilMetrics = [
-  { label: 'pH Level', value: '6.2', unit: '', score: 78, status: 'good', icon: '🌱' },
-  { label: 'Nitrogen', value: '45', unit: 'mg/kg', score: 62, status: 'medium', icon: '⚗️' },
-  { label: 'Phosphorus', value: '32', unit: 'mg/kg', score: 55, status: 'medium', icon: '🔬' },
-  { label: 'Potassium', value: '180', unit: 'mg/kg', score: 82, status: 'good', icon: '🧪' },
-  { label: 'Moisture', value: '68', unit: '%', score: 68, status: 'good', icon: '💧' },
-  { label: 'Salinity', value: '0.3', unit: 'dS/m', score: 90, status: 'excellent', icon: '🧂' },
+  { label: 'pH Level', value: '6.2', unit: '', score: 78, icon: '🌱' },
+  { label: 'Nitrogen', value: '45', unit: 'mg/kg', score: 62, icon: '⚗️' },
+  { label: 'Phosphorus', value: '32', unit: 'mg/kg', score: 55, icon: '🔬' },
+  { label: 'Potassium', value: '180', unit: 'mg/kg', score: 82, icon: '🧪' },
+  { label: 'Moisture', value: '68', unit: '%', score: 68, icon: '💧' },
+  { label: 'Salinity', value: '0.3', unit: 'dS/m', score: 90, icon: '🧂' },
 ];
 
 const weatherData = [
   { label: 'Temperature', value: '24°C', icon: Thermometer, color: 'hsl(43 96% 56%)' },
   { label: 'Humidity', value: '72%', icon: Droplets, color: 'hsl(200 90% 50%)' },
-  { label: 'Wind Speed', value: '12 km/h', icon: Wind, color: 'hsl(145 100% 39%)' },
+  { label: 'Wind Speed', value: '12 km/h', icon: Wind, color: 'hsl(var(--emerald))' },
   { label: 'UV Index', value: '5 Mod', icon: Sun, color: 'hsl(45 100% 51%)' },
 ];
 
 const alerts = [
   { type: 'warning', message: 'Heavy rainfall expected tomorrow. Check drainage.', icon: CloudRain, color: 'hsl(200 90% 50%)' },
   { type: 'critical', message: 'Late blight risk high for tomatoes. Inspect field.', icon: AlertTriangle, color: 'hsl(0 100% 66%)' },
-  { type: 'info', message: 'Maize prices +18% in Kigali. Optimal sell window.', icon: TrendingUp, color: 'hsl(145 100% 39%)' },
+  { type: 'info', message: 'Maize prices +18% in Kigali. Optimal sell window.', icon: TrendingUp, color: 'hsl(var(--emerald))' },
 ];
 
 const aiInsights = [
   { title: 'Apply Fertilizer', desc: 'Nitrogen levels low. Apply 40kg/ha urea this week.', priority: 'High', color: 'hsl(45 100% 51%)' },
   { title: 'Irrigation Needed', desc: 'North field Zone B needs water in 6 hours.', priority: 'Medium', color: 'hsl(200 90% 50%)' },
-  { title: 'Harvest Window', desc: 'Maize in Field A ready for harvest in 12 days.', priority: 'Low', color: 'hsl(145 100% 39%)' },
+  { title: 'Harvest Window', desc: 'Maize in Field A ready for harvest in 12 days.', priority: 'Low', color: 'hsl(var(--emerald))' },
 ];
 
 const recentActivity = [
   { action: 'Soil test completed', field: 'Field A', time: '2h ago', status: 'done' },
   { action: 'Irrigation scheduled', field: 'Field B', time: '4h ago', status: 'active' },
   { action: 'Market listing approved', field: 'Maize 500kg', time: '1d ago', status: 'done' },
-  { action: 'Disease scan uploaded', field: 'Tomatoes', time: '2d ago', status: 'done' },
+  { action: 'Media captured', field: 'Tomatoes', time: '2d ago', status: 'done' },
 ];
 
 function ScoreMeter({ score, color }: { score: number; color: string }) {
@@ -54,6 +54,9 @@ export default function FarmerDashboard() {
   const { t, farmerMode, user } = useApp();
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const healthScore = 74;
+  const healthColor = healthScore >= 70 ? 'var(--emerald)' : healthScore >= 50 ? 'var(--warning)' : 'var(--alert)';
+  const healthStatus = healthScore >= 70 ? 'Healthy' : healthScore >= 50 ? 'Warning' : 'Critical';
 
   return (
     <DashboardLayout>
@@ -65,6 +68,45 @@ export default function FarmerDashboard() {
             <p className="text-muted-foreground text-sm mt-0.5">Farm Intelligence Dashboard • {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
           </div>
           <ModeSwitch />
+        </div>
+
+        {/* Signal-First: High-Impedance Status Hero */}
+        <div className="glass-card p-6" style={{ border: `1px solid hsl(${healthColor} / 0.25)` }}>
+          <div className="flex flex-col md:flex-row items-center gap-6">
+            <div className="relative w-32 h-32 flex-shrink-0">
+              <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+                <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(0 0% 12%)" strokeWidth="8" />
+                <circle cx="50" cy="50" r="42" fill="none" stroke={`hsl(${healthColor})`} strokeWidth="8"
+                  strokeDasharray={`${healthScore * 2.64} 264`} strokeLinecap="round"
+                  style={{ filter: `drop-shadow(0 0 10px hsl(${healthColor} / 0.5))` }} />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-3xl font-bold mono">{healthScore}</span>
+                <span className="text-xs font-medium" style={{ color: `hsl(${healthColor})` }}>{healthStatus}</span>
+              </div>
+            </div>
+            <div className="flex-1 text-center md:text-left">
+              <div className="text-xs uppercase tracking-widest mb-1" style={{ color: `hsl(${healthColor})` }}>
+                Farm Performance Index
+              </div>
+              <div className="text-lg font-semibold mb-2">Your farm is performing well</div>
+              <div className="text-sm text-muted-foreground mb-3">+6 points from last week • Apply AI recommendations to improve further</div>
+              {/* 2x2 Quadrant Mini */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { label: 'Soil Health', value: '74%', color: 'var(--emerald)' },
+                  { label: 'Crop Status', value: 'Good', color: 'var(--emerald)' },
+                  { label: 'Market Opp.', value: '+18%', color: 'var(--gold)' },
+                  { label: 'Risk Alert', value: '2 Active', color: 'var(--alert)' },
+                ].map(q => (
+                  <div key={q.label} className="p-2 rounded-lg text-center" style={{ background: 'hsl(0 0% 8%)' }}>
+                    <div className="text-xs text-muted-foreground">{q.label}</div>
+                    <div className="text-sm font-bold" style={{ color: `hsl(${q.color})` }}>{q.value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Alerts */}
@@ -81,7 +123,7 @@ export default function FarmerDashboard() {
           </div>
         )}
 
-        {/* Top metrics */}
+        {/* Weather */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {weatherData.map(w => (
             <div key={w.label} className="metric-card">
@@ -98,8 +140,6 @@ export default function FarmerDashboard() {
 
         {/* 3-column layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* Soil Intelligence */}
           <div className="lg:col-span-2 glass-card p-5">
             <div className="flex items-center justify-between mb-5">
               <div>
@@ -123,9 +163,9 @@ export default function FarmerDashboard() {
                     <span className="text-xs text-muted-foreground mb-0.5">{m.unit}</span>
                   </div>
                   <ScoreMeter score={m.score} 
-                    color={m.score >= 80 ? 'hsl(145 100% 39%)' : m.score >= 60 ? 'hsl(45 100% 51%)' : 'hsl(0 100% 66%)'} />
+                    color={m.score >= 80 ? 'hsl(var(--emerald))' : m.score >= 60 ? 'hsl(45 100% 51%)' : 'hsl(0 100% 66%)'} />
                   <span className="text-xs mt-1 block" style={{ 
-                    color: m.score >= 80 ? 'hsl(145 100% 39%)' : m.score >= 60 ? 'hsl(45 100% 51%)' : 'hsl(0 100% 66%)' 
+                    color: m.score >= 80 ? 'hsl(var(--emerald))' : m.score >= 60 ? 'hsl(45 100% 51%)' : 'hsl(0 100% 66%)' 
                   }}>
                     {m.score}% optimal
                   </span>
@@ -134,7 +174,6 @@ export default function FarmerDashboard() {
             </div>
           </div>
 
-          {/* AI Insights */}
           <div className="glass-card p-5">
             <div className="flex items-center justify-between mb-5">
               <h2 className="font-semibold">AI Action Plan</h2>
@@ -154,13 +193,12 @@ export default function FarmerDashboard() {
               ))}
             </div>
             
-            {/* 7-day forecast */}
             <div className="mt-5">
               <h3 className="text-sm font-medium mb-3">7-Day Forecast</h3>
               <div className="flex gap-2 overflow-x-auto pb-2">
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
                   <div key={day} className="flex flex-col items-center gap-1 flex-shrink-0 px-2 py-2 rounded-lg"
-                    style={{ background: i === 0 ? 'hsl(145 100% 39% / 0.15)' : 'hsl(0 0% 8%)' }}>
+                    style={{ background: i === 0 ? 'hsl(var(--emerald) / 0.15)' : 'hsl(0 0% 8%)' }}>
                     <span className="text-xs text-muted-foreground">{day}</span>
                     <span className="text-lg">{['☀️', '⛅', '🌧️', '🌧️', '⛅', '☀️', '☀️'][i]}</span>
                     <span className="text-xs font-medium">{[24, 22, 19, 20, 23, 25, 26][i]}°</span>
@@ -173,12 +211,10 @@ export default function FarmerDashboard() {
 
         {/* Bottom row */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          {/* Market Snapshot */}
           <div className="glass-card p-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-semibold">Market Snapshot</h2>
-              <button className="text-xs flex items-center gap-1" style={{ color: 'hsl(145 100% 39%)' }}>
+              <button className="text-xs flex items-center gap-1" style={{ color: 'hsl(var(--emerald))' }}>
                 {t('viewAll')} <ArrowRight className="w-3 h-3" />
               </button>
             </div>
@@ -201,7 +237,7 @@ export default function FarmerDashboard() {
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-semibold">{item.price}</div>
-                    <div className="flex items-center gap-1" style={{ color: item.trend === 'up' ? 'hsl(145 100% 39%)' : 'hsl(0 100% 66%)' }}>
+                    <div className="flex items-center gap-1" style={{ color: item.trend === 'up' ? 'hsl(var(--emerald))' : 'hsl(0 100% 66%)' }}>
                       {item.trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                       <span className="text-xs">{item.change}</span>
                     </div>
@@ -211,19 +247,16 @@ export default function FarmerDashboard() {
             </div>
           </div>
 
-          {/* Recent Activity */}
           <div className="glass-card p-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-semibold">Recent Activity</h2>
-              <div className="flex items-center gap-1">
-                <Activity className="w-4 h-4" style={{ color: 'hsl(145 100% 39%)' }} />
-              </div>
+              <Activity className="w-4 h-4" style={{ color: 'hsl(var(--emerald))' }} />
             </div>
             <div className="space-y-3">
               {recentActivity.map((a, i) => (
                 <div key={i} className="flex items-center gap-3 py-2">
                   <div className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{ background: a.status === 'done' ? 'hsl(145 100% 39%)' : 'hsl(45 100% 51%)' }} />
+                    style={{ background: a.status === 'done' ? 'hsl(var(--emerald))' : 'hsl(45 100% 51%)' }} />
                   <div className="flex-1">
                     <span className="text-sm">{a.action}</span>
                     <span className="text-xs text-muted-foreground ml-2">• {a.field}</span>
@@ -231,19 +264,6 @@ export default function FarmerDashboard() {
                   <span className="text-xs text-muted-foreground">{a.time}</span>
                 </div>
               ))}
-            </div>
-
-            {/* AI Score */}
-            <div className="mt-5 p-4 rounded-xl" style={{ background: 'hsl(145 100% 39% / 0.08)', border: '1px solid hsl(145 100% 39% / 0.2)' }}>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4" style={{ color: 'hsl(145 100% 39%)' }} />
-                  <span className="text-sm font-medium">Farm Health Score</span>
-                </div>
-                <span className="text-2xl font-bold" style={{ color: 'hsl(145 100% 39%)' }}>74</span>
-              </div>
-              <ScoreMeter score={74} color="hsl(145 100% 39%)" />
-              <p className="text-xs text-muted-foreground mt-2">+6 points from last week • Apply AI recommendations to improve</p>
             </div>
           </div>
         </div>

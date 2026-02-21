@@ -2,23 +2,83 @@ import { useState, useEffect, ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
 import {
-  Leaf, LayoutDashboard, ShoppingBag, Cpu, Eye, BarChart3,
+  Leaf, LayoutDashboard, ShoppingBag, Cpu, Camera, BarChart3,
   TrendingUp, Bell, Settings, Menu, X, ChevronRight,
-  Mic, Globe, LogOut, User, Newspaper
+  Mic, Globe, LogOut, User, Newspaper, Plus
 } from 'lucide-react';
 import VoiceAssistant from './VoiceAssistant';
 import NotificationPanel from './NotificationPanel';
 
-const navItems = [
-  { path: '/dashboard', icon: LayoutDashboard, label: 'dashboard' },
-  { path: '/dashboard/ai-guidance', icon: Leaf, label: 'myProjects' },
-  { path: '/dashboard/marketplace', icon: ShoppingBag, label: 'marketplace' },
-  { path: '/dashboard/devices', icon: Cpu, label: 'devices' },
-  { path: '/dashboard/vision', icon: Eye, label: 'visionAI' },
-  { path: '/dashboard/market-intel', icon: TrendingUp, label: 'marketIntel' },
-  { path: '/dashboard/analytics', icon: BarChart3, label: 'analytics' },
-  { path: '/dashboard/news', icon: Newspaper, label: 'news' },
-];
+// Role-specific nav items
+const getNavItems = (role: string) => {
+  const common = [
+    { path: '/dashboard', icon: LayoutDashboard, label: 'dashboard' },
+  ];
+
+  switch (role) {
+    case 'farmer':
+      return [
+        ...common,
+        { path: '/dashboard/ai-guidance', icon: Leaf, label: 'myProjects' },
+        { path: '/dashboard/marketplace', icon: ShoppingBag, label: 'marketplace' },
+        { path: '/dashboard/devices', icon: Cpu, label: 'devices' },
+        { path: '/dashboard/capture', icon: Camera, label: 'capture' },
+        { path: '/dashboard/market-intel', icon: TrendingUp, label: 'marketIntel' },
+        { path: '/dashboard/analytics', icon: BarChart3, label: 'analytics' },
+        { path: '/dashboard/news', icon: Newspaper, label: 'news' },
+      ];
+    case 'buyer':
+      return [
+        ...common,
+        { path: '/dashboard/marketplace', icon: ShoppingBag, label: 'marketplace' },
+        { path: '/dashboard/market-intel', icon: TrendingUp, label: 'marketIntel' },
+        { path: '/dashboard/news', icon: Newspaper, label: 'news' },
+      ];
+    case 'investor':
+      return [
+        ...common,
+        { path: '/dashboard/market-intel', icon: TrendingUp, label: 'marketIntel' },
+        { path: '/dashboard/analytics', icon: BarChart3, label: 'analytics' },
+        { path: '/dashboard/news', icon: Newspaper, label: 'news' },
+      ];
+    case 'supplier':
+      return [
+        ...common,
+        { path: '/dashboard/marketplace', icon: ShoppingBag, label: 'marketplace' },
+        { path: '/dashboard/market-intel', icon: TrendingUp, label: 'marketIntel' },
+        { path: '/dashboard/news', icon: Newspaper, label: 'news' },
+      ];
+    case 'cooperative':
+      return [
+        ...common,
+        { path: '/dashboard/marketplace', icon: ShoppingBag, label: 'marketplace' },
+        { path: '/dashboard/analytics', icon: BarChart3, label: 'analytics' },
+        { path: '/dashboard/news', icon: Newspaper, label: 'news' },
+      ];
+    case 'admin':
+      return [
+        ...common,
+        { path: '/dashboard/marketplace', icon: ShoppingBag, label: 'marketplace' },
+        { path: '/dashboard/devices', icon: Cpu, label: 'devices' },
+        { path: '/dashboard/market-intel', icon: TrendingUp, label: 'marketIntel' },
+        { path: '/dashboard/analytics', icon: BarChart3, label: 'analytics' },
+        { path: '/dashboard/news', icon: Newspaper, label: 'news' },
+      ];
+    default:
+      return common;
+  }
+};
+
+// Role-specific FAB config
+const getFabConfig = (role: string) => {
+  switch (role) {
+    case 'farmer': return { label: '🌱 Start AI Project', path: '/dashboard/ai-guidance' };
+    case 'buyer': return { label: '📋 Post Request', path: '/dashboard/marketplace' };
+    case 'supplier': return { label: '📦 Add Product', path: '/dashboard/marketplace' };
+    case 'investor': return { label: '💰 Fund Project', path: '/dashboard/market-intel' };
+    default: return { label: '🌱 Get Started', path: '/dashboard' };
+  }
+};
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { t, user, sidebarOpen, setSidebarOpen, unreadCount, language, setLanguage } = useApp();
@@ -36,37 +96,39 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }, []);
 
   const roleColors: Record<string, string> = {
-    farmer: 'hsl(145 100% 39%)',
+    farmer: 'hsl(var(--emerald))',
     buyer: 'hsl(200 90% 50%)',
     investor: 'hsl(43 96% 56%)',
-    supplier: 'hsl(14 24% 34%)',
+    supplier: 'hsl(20 30% 50%)',
     cooperative: 'hsl(270 60% 60%)',
     admin: 'hsl(0 100% 66%)',
   };
 
   const roleColor = roleColors[user?.role || 'farmer'];
+  const navItems = getNavItems(user?.role || 'farmer');
+  const fabConfig = getFabConfig(user?.role || 'farmer');
 
   return (
-    <div className="flex min-h-screen w-full" style={{ background: 'hsl(0 0% 4%)' }}>
+    <div className="flex min-h-screen w-full" style={{ background: 'hsl(var(--background))' }}>
       {/* Sidebar - Desktop */}
       {!isMobile && (
         <aside className="flex flex-col h-screen sticky top-0 transition-all duration-300"
           style={{ 
             width: sidebarOpen ? '240px' : '64px', 
-            background: 'hsl(0 0% 5%)', 
-            borderRight: '1px solid hsl(0 0% 10%)' 
+            background: 'hsl(var(--sidebar-background))', 
+            borderRight: '1px solid hsl(var(--border))' 
           }}>
           {/* Logo */}
-          <div className="flex items-center gap-3 px-4 py-5 border-b" style={{ borderColor: 'hsl(0 0% 10%)' }}>
+          <div className="flex items-center gap-3 px-4 py-5 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
             <div className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center" style={{ background: 'var(--gradient-emerald)' }}>
-              <Leaf className="w-4 h-4" style={{ color: 'hsl(0 0% 4%)' }} />
+              <Leaf className="w-4 h-4" style={{ color: 'hsl(var(--primary-foreground))' }} />
             </div>
             {sidebarOpen && <span className="font-bold text-sm tracking-wide">AGRIPIO</span>}
           </div>
 
           {/* User */}
           {sidebarOpen && user && (
-            <div className="px-4 py-4 border-b" style={{ borderColor: 'hsl(0 0% 10%)' }}>
+            <div className="px-4 py-4 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
                   style={{ background: roleColor + '25', color: roleColor }}>
@@ -90,16 +152,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   className={`nav-item ${active ? 'active' : ''}`}
                   title={!sidebarOpen ? t(item.label as any) : undefined}>
                   <item.icon className="w-4 h-4 flex-shrink-0" />
-                  {sidebarOpen && <span>{t(item.label as any)}</span>}
+                  {sidebarOpen && <span>{item.label === 'capture' ? 'Media Capture' : t(item.label as any)}</span>}
                 </Link>
               );
             })}
           </nav>
 
           {/* Bottom */}
-          <div className="px-2 py-4 border-t space-y-1" style={{ borderColor: 'hsl(0 0% 10%)' }}>
-            <button className="nav-item w-full" onClick={() => setLanguage(language === 'en' ? 'rw' : 'en')}
-              title={!sidebarOpen ? (language === 'en' ? 'Kinyarwanda' : 'English') : undefined}>
+          <div className="px-2 py-4 border-t space-y-1" style={{ borderColor: 'hsl(var(--border))' }}>
+            <button className="nav-item w-full" onClick={() => setLanguage(language === 'en' ? 'rw' : 'en')}>
               <Globe className="w-4 h-4 flex-shrink-0" />
               {sidebarOpen && <span>{language === 'en' ? 'Kinyarwanda' : 'English'}</span>}
             </button>
@@ -116,7 +177,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           {/* Collapse toggle */}
           <button onClick={() => setSidebarOpen(!sidebarOpen)}
             className="absolute -right-3 top-7 w-6 h-6 rounded-full flex items-center justify-center"
-            style={{ background: 'hsl(0 0% 12%)', border: '1px solid hsl(0 0% 20%)', color: 'hsl(120 10% 55%)' }}>
+            style={{ background: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--muted-foreground))' }}>
             <ChevronRight className="w-3.5 h-3.5" style={{ transform: sidebarOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
           </button>
         </aside>
@@ -126,12 +187,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
         <header className="sticky top-0 z-40 flex items-center justify-between px-4 md:px-6 h-14"
-          style={{ background: 'hsl(0 0% 5% / 0.9)', backdropFilter: 'blur(20px)', borderBottom: '1px solid hsl(0 0% 10%)' }}>
+          style={{ background: 'hsl(var(--sidebar-background) / 0.9)', backdropFilter: 'blur(20px)', borderBottom: '1px solid hsl(var(--border))' }}>
           
           {isMobile && (
             <div className="flex items-center gap-3">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'var(--gradient-emerald)' }}>
-                <Leaf className="w-4 h-4" style={{ color: 'hsl(0 0% 4%)' }} />
+                <Leaf className="w-4 h-4" style={{ color: 'hsl(var(--primary-foreground))' }} />
               </div>
               <span className="font-bold text-sm">AGRIPIO</span>
             </div>
@@ -139,33 +200,29 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           {!isMobile && <div />}
 
           <div className="flex items-center gap-2">
-            {/* Lang toggle */}
             <button onClick={() => setLanguage(language === 'en' ? 'rw' : 'en')}
               className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-              style={{ background: 'hsl(0 0% 10%)', color: 'hsl(145 100% 39%)', border: '1px solid hsl(145 100% 39% / 0.2)' }}>
+              style={{ background: 'hsl(var(--secondary))', color: 'hsl(var(--emerald))', border: '1px solid hsl(var(--emerald) / 0.2)' }}>
               {language.toUpperCase()}
             </button>
 
-            {/* Notifications */}
             <button className="relative w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/5"
               onClick={() => { setShowNotifications(!showNotifications); setShowVoice(false); }}>
               <Bell className="w-4 h-4" />
               {unreadCount > 0 && (
                 <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold"
-                  style={{ background: 'hsl(0 100% 66%)', color: 'white' }}>
+                  style={{ background: 'hsl(var(--alert))', color: 'white' }}>
                   {unreadCount}
                 </span>
               )}
             </button>
 
-            {/* Voice */}
             <button className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
               onClick={() => { setShowVoice(!showVoice); setShowNotifications(false); }}
-              style={{ background: showVoice ? 'hsl(145 100% 39% / 0.2)' : 'transparent' }}>
-              <Mic className="w-4 h-4" style={{ color: showVoice ? 'hsl(145 100% 39%)' : undefined }} />
+              style={{ background: showVoice ? 'hsl(var(--emerald) / 0.2)' : 'transparent' }}>
+              <Mic className="w-4 h-4" style={{ color: showVoice ? 'hsl(var(--emerald))' : undefined }} />
             </button>
 
-            {/* User avatar */}
             {user && (
               <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer"
                 style={{ background: roleColor + '25', color: roleColor }}>
@@ -196,9 +253,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               return (
                 <Link key={item.path} to={item.path}
                   className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all"
-                  style={{ color: active ? 'hsl(145 100% 39%)' : 'hsl(120 10% 55%)', background: active ? 'hsl(145 100% 39% / 0.1)' : 'transparent' }}>
+                  style={{ color: active ? 'hsl(var(--emerald))' : 'hsl(var(--muted-foreground))', background: active ? 'hsl(var(--emerald) / 0.1)' : 'transparent' }}>
                   <item.icon className="w-5 h-5" />
-                  <span className="text-xs">{t(item.label as any).split(' ')[0]}</span>
+                  <span className="text-xs">{item.label === 'capture' ? 'Capture' : t(item.label as any).split(' ')[0]}</span>
                 </Link>
               );
             })}
@@ -209,13 +266,22 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Voice Assistant */}
       {showVoice && <VoiceAssistant onClose={() => setShowVoice(false)} />}
 
-      {/* Floating Voice Button */}
+      {/* Role-specific FAB */}
       {!showVoice && (
-        <button className="fixed bottom-20 md:bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center z-50 animate-emerald-glow"
-          onClick={() => setShowVoice(true)}
-          style={{ background: 'var(--gradient-emerald)', boxShadow: 'var(--shadow-emerald-strong)' }}>
-          <Mic className="w-6 h-6" style={{ color: 'hsl(0 0% 4%)' }} />
-        </button>
+        <div className="fixed bottom-20 md:bottom-6 right-6 z-50 flex flex-col gap-3 items-end">
+          {/* Main FAB */}
+          <button className="px-5 py-3 rounded-full flex items-center gap-2 text-sm font-semibold animate-emerald-glow"
+            onClick={() => navigate(fabConfig.path)}
+            style={{ background: 'var(--gradient-emerald)', boxShadow: 'var(--shadow-emerald-strong)', color: 'hsl(var(--primary-foreground))' }}>
+            {fabConfig.label}
+          </button>
+          {/* Voice FAB */}
+          <button className="w-12 h-12 rounded-full flex items-center justify-center"
+            onClick={() => setShowVoice(true)}
+            style={{ background: 'hsl(var(--secondary))', border: '1px solid hsl(var(--emerald) / 0.3)' }}>
+            <Mic className="w-5 h-5" style={{ color: 'hsl(var(--emerald))' }} />
+          </button>
+        </div>
       )}
     </div>
   );
