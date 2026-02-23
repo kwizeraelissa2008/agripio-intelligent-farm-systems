@@ -218,24 +218,23 @@ export default function FarmerDashboard() {
                 {t('viewAll')} <ArrowRight className="w-3 h-3" />
               </button>
             </div>
-            <div className="space-y-3">
+             <div className="space-y-3">
               {[
-                { crop: 'Maize', price: 'RWF 350/kg', change: '+18%', trend: 'up', demand: 'High' },
-                { crop: 'Tomatoes', price: 'RWF 800/kg', change: '+5%', trend: 'up', demand: 'Very High' },
-                { crop: 'Beans', price: 'RWF 1,200/kg', change: '-3%', trend: 'down', demand: 'Medium' },
-                { crop: 'Cassava', price: 'RWF 250/kg', change: '+2%', trend: 'up', demand: 'High' },
+                { crop: 'Maize', price: 'RWF 350/kg', change: '+18%', trend: 'up', demand: 'High', desc: 'Grade A dried maize, export quality', image: 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=80&h=80&fit=crop' },
+                { crop: 'Tomatoes', price: 'RWF 800/kg', change: '+5%', trend: 'up', demand: 'Very High', desc: 'Fresh organic cherry tomatoes', image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=80&h=80&fit=crop' },
+                { crop: 'Beans', price: 'RWF 1,200/kg', change: '-3%', trend: 'down', demand: 'Medium', desc: 'Sun-dried red kidney beans', image: 'https://images.unsplash.com/photo-1551462147-ff29053bfc14?w=80&h=80&fit=crop' },
+                { crop: 'Cassava', price: 'RWF 250/kg', change: '+2%', trend: 'up', demand: 'High', desc: 'Fresh cassava, ideal for processing', image: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=80&h=80&fit=crop' },
               ].map(item => (
-                <div key={item.crop} className="flex items-center justify-between py-2 border-b" style={{ borderColor: 'hsl(0 0% 10%)' }}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'hsl(0 0% 10%)' }}>
-                      <span className="text-sm">🌾</span>
-                    </div>
-                    <div>
+                <div key={item.crop} className="flex items-center gap-3 py-2 border-b" style={{ borderColor: 'hsl(0 0% 10%)' }}>
+                  <img src={item.image} alt={item.crop} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
                       <span className="text-sm font-medium">{item.crop}</span>
-                      <span className="text-xs text-muted-foreground ml-2">{item.demand} demand</span>
+                      <span className="text-xs text-muted-foreground">{item.demand}</span>
                     </div>
+                    <span className="text-xs text-muted-foreground truncate block">{item.desc}</span>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex-shrink-0">
                     <div className="text-sm font-semibold">{item.price}</div>
                     <div className="flex items-center gap-1" style={{ color: item.trend === 'up' ? 'hsl(var(--emerald))' : 'hsl(0 100% 66%)' }}>
                       {item.trend === 'up' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}

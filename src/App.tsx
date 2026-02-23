@@ -20,6 +20,8 @@ import MarketIntel from "./pages/MarketIntel";
 import Analytics from "./pages/Analytics";
 import News from "./pages/News";
 import NewsDetail from "./pages/NewsDetail";
+import SettingsPage from "./pages/Settings";
+import IPLearning from "./pages/IPLearning";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +53,8 @@ function AppRoutes() {
       <Route path="/dashboard/analytics" element={isAuthenticated ? <Analytics /> : <Navigate to="/onboarding" />} />
       <Route path="/dashboard/news" element={isAuthenticated ? <News /> : <Navigate to="/onboarding" />} />
       <Route path="/dashboard/news/:id" element={isAuthenticated ? <NewsDetail /> : <Navigate to="/onboarding" />} />
+      <Route path="/dashboard/settings" element={isAuthenticated ? <SettingsPage /> : <Navigate to="/onboarding" />} />
+      <Route path="/dashboard/ip-learning" element={isAuthenticated ? <IPLearning /> : <Navigate to="/onboarding" />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
