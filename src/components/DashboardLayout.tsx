@@ -24,7 +24,7 @@ const getNavItems = (role: string) => {
         { path: '/dashboard/devices', icon: Cpu, label: 'devices' },
         { path: '/dashboard/capture', icon: Camera, label: 'capture' },
         { path: '/dashboard/market-intel', icon: TrendingUp, label: 'marketIntel' },
-        { path: '/dashboard/analytics', icon: BarChart3, label: 'analytics' },
+        { path: '/dashboard/analytics', icon: BarChart3, label: 'AI Advice' },
         { path: '/dashboard/news', icon: Newspaper, label: 'news' },
       ];
     case 'buyer':

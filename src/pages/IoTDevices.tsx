@@ -1,198 +1,242 @@
 import { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Cpu, Plus, Wifi, WifiOff, RefreshCw, Power, Droplets, Thermometer, Clock, Sliders } from 'lucide-react';
+import { Cpu, Wifi, WifiOff, Power, Thermometer, Droplets, Sun, Wind, Zap, Shield, Clock, AlertTriangle, CheckCircle, Settings } from 'lucide-react';
 
-const mockDevices = [
-  { id: 'AGR-001', name: 'Field A Sensor', field: 'North Field', status: 'online', lastSync: '2 min ago', battery: 87, ph: 6.2, nitrogen: 45, moisture: 68, temp: 24 },
-  { id: 'AGR-002', name: 'Field B Sensor', field: 'East Field', status: 'online', lastSync: '5 min ago', battery: 62, ph: 5.8, nitrogen: 38, moisture: 55, temp: 22 },
-  { id: 'AGR-003', name: 'Field C Sensor', field: 'South Field', status: 'offline', lastSync: '3h ago', battery: 12, ph: 6.5, nitrogen: 52, moisture: 72, temp: 20 },
+const devices = [
+  {
+    id: 'AGR-001',
+    name: 'Soil Chamber Sensor',
+    description: 'Monitors soil pH, moisture, temperature, and NPK levels in real-time. Essential for precision agriculture decisions.',
+    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=400&h=300&fit=crop',
+    status: 'online' as const,
+    battery: 87,
+    lastSync: '2 min ago',
+    results: {
+      ph: { value: 6.2, status: 'optimal', desc: 'Slightly acidic — ideal for most crops' },
+      moisture: { value: 68, status: 'good', desc: '68% saturation — adequate hydration' },
+      temperature: { value: 24, status: 'optimal', desc: '24°C — perfect growing temperature' },
+      nitrogen: { value: 45, status: 'low', desc: '45 mg/kg — below recommended level' },
+      phosphorus: { value: 32, status: 'moderate', desc: '32 mg/kg — acceptable range' },
+      potassium: { value: 180, status: 'good', desc: '180 mg/kg — sufficient supply' },
+    },
+    aiAdvice: 'Your soil is slightly nitrogen-deficient. Apply 40kg/ha of urea within the next 5 days. The pH of 6.2 is excellent for maize and beans. Moisture levels are adequate — no additional watering needed this week. Consider adding compost to boost organic matter and long-term fertility.',
+    controls: [
+      { id: 'data_logging', label: 'Data Logging', desc: 'Record sensor data every 15 minutes', enabled: true },
+      { id: 'alerts', label: 'Smart Alerts', desc: 'Get notified when values go out of range', enabled: true },
+      { id: 'sleep_mode', label: 'Power Save Mode', desc: 'Reduce sampling frequency to save battery', enabled: false },
+    ],
+  },
+  {
+    id: 'AGR-002',
+    name: 'Crop Health Monitor',
+    description: 'Analyzes crop health scores, nutrient deficiency indices, and growth patterns using environmental sensors.',
+    image: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=400&h=300&fit=crop',
+    status: 'online' as const,
+    battery: 62,
+    lastSync: '5 min ago',
+    results: {
+      healthScore: { value: 82, status: 'good', desc: '82/100 — crops are thriving' },
+      growthRate: { value: 3.2, status: 'optimal', desc: '3.2 cm/day — above average growth' },
+      leafColor: { value: 88, status: 'good', desc: '88% green index — healthy chlorophyll' },
+      stressLevel: { value: 15, status: 'low', desc: '15% stress — minimal environmental pressure' },
+      deficiencyIndex: { value: 22, status: 'moderate', desc: '22/100 — minor nutrient gaps detected' },
+      pestRisk: { value: 8, status: 'low', desc: '8% — very low pest probability' },
+    },
+    aiAdvice: 'Crops are in excellent health with an 82/100 score. The minor nutrient deficiency (index 22) suggests applying a foliar spray with micronutrients (zinc + boron) within 3 days. Growth rate of 3.2cm/day is 15% above seasonal average. Monitor leaf edges for early signs of potassium deficiency. No pest treatment needed at this time.',
+    controls: [
+      { id: 'daily_scan', label: 'Daily Health Scan', desc: 'Automated crop health assessment each morning', enabled: true },
+      { id: 'growth_tracking', label: 'Growth Tracking', desc: 'Track plant height and canopy development', enabled: true },
+      { id: 'night_mode', label: 'Night Monitoring', desc: 'Enable infrared sensors for nighttime data', enabled: false },
+    ],
+  },
+  {
+    id: 'AGR-003',
+    name: 'Fertilizer Analyzer',
+    description: 'Tests fertilizer compatibility, concentration safety, and nutrient release rates for optimal application.',
+    image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop',
+    status: 'offline' as const,
+    battery: 12,
+    lastSync: '3h ago',
+    results: {
+      compatibility: { value: 91, status: 'good', desc: '91% compatible with current soil type' },
+      concentration: { value: 78, status: 'safe', desc: 'Safe concentration — no burn risk' },
+      releaseRate: { value: 65, status: 'moderate', desc: '65% — medium-speed nutrient release' },
+      npkBalance: { value: 85, status: 'good', desc: 'NPK ratio 20-10-10 — well balanced' },
+      organicContent: { value: 42, status: 'moderate', desc: '42% organic matter — could improve' },
+      effectiveness: { value: 88, status: 'good', desc: '88% predicted effectiveness score' },
+    },
+    aiAdvice: 'The current fertilizer blend (NPK 20-10-10) is 91% compatible with your soil profile. However, organic content at 42% is below ideal. Consider mixing with compost at a 3:1 ratio to enhance microbial activity. ⚠️ Device battery is critically low at 12% — charge immediately to avoid data loss. The medium release rate suggests applying 2 weeks before planting for best absorption.',
+    controls: [
+      { id: 'auto_test', label: 'Auto Testing', desc: 'Automatically test new fertilizer batches', enabled: false },
+      { id: 'mixing_guide', label: 'Mixing Recommendations', desc: 'AI-generated mixing ratios for your soil', enabled: true },
+      { id: 'safety_check', label: 'Safety Monitoring', desc: 'Alert if concentration exceeds safe limits', enabled: true },
+    ],
+  },
 ];
 
+const statusColors = {
+  optimal: 'hsl(var(--emerald))',
+  good: 'hsl(var(--emerald))',
+  moderate: 'hsl(var(--warning))',
+  low: 'hsl(var(--alert))',
+  safe: 'hsl(var(--emerald))',
+};
+
 export default function IoTDevices() {
-  const [virtualMode, setVirtualMode] = useState(false);
-  const [virtualData, setVirtualData] = useState({ ph: '6.2', nitrogen: '45', phosphorus: '32', moisture: '68' });
-  const [irrigationOn, setIrrigationOn] = useState(false);
-  const [autoIrrigation, setAutoIrrigation] = useState(true);
-  const [moistureThreshold, setMoistureThreshold] = useState(60);
-  const [irrigationSchedule, setIrrigationSchedule] = useState('06:00');
-  const [commandLog, setCommandLog] = useState<string[]>(['System initialized', 'Auto-irrigation: ON']);
+  const [expandedDevice, setExpandedDevice] = useState<string | null>('AGR-001');
+  const [controlStates, setControlStates] = useState<Record<string, Record<string, boolean>>>(() => {
+    const initial: Record<string, Record<string, boolean>> = {};
+    devices.forEach(d => {
+      initial[d.id] = {};
+      d.controls.forEach(c => { initial[d.id][c.id] = c.enabled; });
+    });
+    return initial;
+  });
 
-  const sendCommand = (cmd: string) => {
-    setCommandLog(prev => [`${new Date().toLocaleTimeString()} — ${cmd}`, ...prev.slice(0, 9)]);
-  };
-
-  const toggleIrrigation = () => {
-    const next = !irrigationOn;
-    setIrrigationOn(next);
-    sendCommand(next ? '🟢 Irrigation turned ON' : '🔴 Irrigation turned OFF');
-  };
-
-  const toggleAutoIrrigation = () => {
-    const next = !autoIrrigation;
-    setAutoIrrigation(next);
-    sendCommand(next ? '🤖 Auto-irrigation ENABLED' : '🔧 Auto-irrigation DISABLED');
+  const toggleControl = (deviceId: string, controlId: string) => {
+    setControlStates(prev => ({
+      ...prev,
+      [deviceId]: { ...prev[deviceId], [controlId]: !prev[deviceId][controlId] },
+    }));
   };
 
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">IoT Devices</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">Real-time soil sensor network & remote control</p>
-          </div>
-          <button className="btn-emerald flex items-center gap-2"><Plus className="w-4 h-4" /> Add Device</button>
+        <div>
+          <h1 className="text-2xl font-bold">🔬 IoT Smart Devices</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            AgriPio's 3-chamber smart testing system — monitor soil, crops, and fertilizer in real-time
+          </p>
         </div>
 
-        {/* Mode toggle */}
-        <div className="flex gap-3">
-          <button onClick={() => setVirtualMode(false)} className="px-4 py-2 rounded-xl text-sm font-medium transition-all"
-            style={!virtualMode ? { background: 'hsl(var(--emerald))', color: 'hsl(0 0% 4%)' } : { background: 'hsl(0 0% 10%)', color: 'hsl(120 10% 55%)', border: '1px solid hsl(0 0% 15%)' }}>
-            📡 Physical Devices
-          </button>
-          <button onClick={() => setVirtualMode(true)} className="px-4 py-2 rounded-xl text-sm font-medium transition-all"
-            style={virtualMode ? { background: 'hsl(200 90% 50%)', color: 'hsl(0 0% 4%)' } : { background: 'hsl(0 0% 10%)', color: 'hsl(120 10% 55%)', border: '1px solid hsl(0 0% 15%)' }}>
-            🧪 Virtual Simulation Mode
-          </button>
-        </div>
-
-        {virtualMode ? (
-          <div className="glass-card p-6" style={{ border: '1px solid hsl(200 90% 50% / 0.3)' }}>
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-2xl">🧪</span>
-              <div>
-                <h2 className="font-semibold">Virtual Simulation Mode</h2>
-                <p className="text-xs text-muted-foreground">No physical device? Enter soil data manually for AI analysis.</p>
+        {/* 3 Device Boxes */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {devices.map(device => (
+            <div
+              key={device.id}
+              className="glass-card overflow-hidden cursor-pointer transition-all"
+              style={{
+                border: expandedDevice === device.id
+                  ? `2px solid ${device.status === 'online' ? 'hsl(var(--emerald))' : 'hsl(var(--alert))'}`
+                  : '1px solid hsl(0 0% 13%)',
+              }}
+              onClick={() => setExpandedDevice(expandedDevice === device.id ? null : device.id)}
+            >
+              {/* Device Image */}
+              <div className="relative">
+                <img src={device.image} alt={device.name} className="w-full h-40 object-cover" />
+                <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
+                  style={{
+                    background: device.status === 'online' ? 'hsl(var(--emerald) / 0.9)' : 'hsl(var(--alert) / 0.9)',
+                    color: 'hsl(0 0% 4%)',
+                  }}>
+                  {device.status === 'online' ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+                  {device.status.toUpperCase()}
+                </div>
+                <div className="absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-mono"
+                  style={{ background: 'hsl(0 0% 0% / 0.7)', color: 'hsl(var(--emerald))' }}>
+                  {device.id}
+                </div>
+                <div className="absolute bottom-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full text-xs"
+                  style={{
+                    background: 'hsl(0 0% 0% / 0.7)',
+                    color: device.battery < 20 ? 'hsl(var(--alert))' : 'hsl(var(--emerald))',
+                  }}>
+                  🔋 {device.battery}%
+                </div>
               </div>
-              <span className="tag ml-auto" style={{ background: 'hsl(200 90% 50% / 0.15)', color: 'hsl(200 90% 50%)' }}>SIMULATED</span>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {Object.entries(virtualData).map(([key, value]) => (
-                <div key={key}>
-                  <label className="text-xs text-muted-foreground mb-1.5 block capitalize">{key === 'ph' ? 'Soil pH' : key}</label>
-                  <input value={value} onChange={e => setVirtualData(p => ({ ...p, [key]: e.target.value }))} type="number"
-                    className="w-full px-4 py-3 rounded-xl text-sm outline-none"
-                    style={{ background: 'hsl(0 0% 10%)', border: '1px solid hsl(0 0% 15%)', color: 'hsl(120 20% 96%)' }} />
-                </div>
-              ))}
-            </div>
-            <button className="btn-emerald mt-4 w-full">🤖 Run AI Analysis on Virtual Data</button>
-          </div>
-        ) : (
-          <>
-            {/* Device list */}
-            <div className="space-y-4">
-              {mockDevices.map(device => (
-                <div key={device.id} className="glass-card p-5" style={{ border: device.status === 'offline' ? '1px solid hsl(0 100% 66% / 0.2)' : '1px solid hsl(var(--emerald) / 0.15)' }}>
-                  <div className="flex flex-col md:flex-row md:items-center gap-4">
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: device.status === 'online' ? 'hsl(var(--emerald) / 0.1)' : 'hsl(0 100% 66% / 0.1)' }}>
-                        {device.status === 'online' ? <Wifi className="w-6 h-6" style={{ color: 'hsl(var(--emerald))' }} /> : <WifiOff className="w-6 h-6" style={{ color: 'hsl(0 100% 66%)' }} />}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">{device.name}</h3>
-                          <span className="status-dot" style={{ background: device.status === 'online' ? 'hsl(var(--emerald))' : 'hsl(0 100% 66%)' }} />
-                        </div>
-                        <p className="text-xs text-muted-foreground">{device.id} • {device.field} • Sync: {device.lastSync}</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-4 gap-3">
-                      {[
-                        { label: 'pH', value: device.ph },
-                        { label: 'N (mg/kg)', value: device.nitrogen },
-                        { label: 'Moisture %', value: device.moisture },
-                        { label: 'Battery', value: `${device.battery}%` },
-                      ].map(m => (
-                        <div key={m.label} className="text-center p-2 rounded-lg" style={{ background: 'hsl(0 0% 8%)' }}>
-                          <div className="text-xs text-muted-foreground">{m.label}</div>
-                          <div className="font-bold text-sm" style={{ color: m.label === 'Battery' && device.battery < 20 ? 'hsl(0 100% 66%)' : 'hsl(var(--emerald))' }}>{m.value}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <button className="p-2 rounded-lg hover:bg-white/5 transition-all"><RefreshCw className="w-4 h-4 text-muted-foreground" /></button>
-                  </div>
-                </div>
-              ))}
-            </div>
 
-            {/* Tesla-Style Remote Control Panel */}
-            <div className="glass-card p-6" style={{ border: '1px solid hsl(var(--emerald) / 0.2)' }}>
-              <h2 className="font-semibold mb-4 flex items-center gap-2">
-                <Sliders className="w-4 h-4" style={{ color: 'hsl(var(--emerald))' }} />
-                Remote Control Panel
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Irrigation toggle */}
-                <div className="p-5 rounded-xl text-center" style={{ background: 'hsl(0 0% 6%)', border: `1px solid ${irrigationOn ? 'hsl(var(--emerald) / 0.4)' : 'hsl(0 0% 12%)'}` }}>
-                  <Droplets className="w-8 h-8 mx-auto mb-3" style={{ color: irrigationOn ? 'hsl(var(--emerald))' : 'hsl(0 0% 30%)' }} />
-                  <div className="text-sm font-medium mb-1">Irrigation</div>
-                  <div className="text-xs text-muted-foreground mb-3">{irrigationOn ? 'Currently running' : 'Standby'}</div>
-                  <button onClick={toggleIrrigation}
-                    className="w-16 h-16 rounded-full flex items-center justify-center mx-auto transition-all"
-                    style={{
-                      background: irrigationOn ? 'hsl(var(--emerald))' : 'hsl(0 0% 15%)',
-                      boxShadow: irrigationOn ? '0 0 30px hsl(var(--emerald) / 0.5)' : 'none',
-                    }}>
-                    <Power className="w-7 h-7" style={{ color: irrigationOn ? 'hsl(0 0% 4%)' : 'hsl(0 0% 40%)' }} />
-                  </button>
-                  <div className="text-xs mt-2 font-medium" style={{ color: irrigationOn ? 'hsl(var(--emerald))' : 'hsl(0 0% 40%)' }}>
-                    {irrigationOn ? 'ON' : 'OFF'}
-                  </div>
-                </div>
-
-                {/* Auto mode + Schedule */}
-                <div className="p-5 rounded-xl" style={{ background: 'hsl(0 0% 6%)', border: '1px solid hsl(0 0% 12%)' }}>
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <div className="text-sm font-medium">Auto-Irrigation</div>
-                      <div className="text-xs text-muted-foreground">AI-controlled</div>
-                    </div>
-                    <button onClick={toggleAutoIrrigation}
-                      className="w-12 h-6 rounded-full flex items-center transition-all px-0.5"
-                      style={{ background: autoIrrigation ? 'hsl(var(--emerald))' : 'hsl(0 0% 25%)', justifyContent: autoIrrigation ? 'flex-end' : 'flex-start' }}>
-                      <div className="w-5 h-5 rounded-full bg-white shadow-sm" />
-                    </button>
-                  </div>
-                  <div className="mb-4">
-                    <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> Schedule Time
-                    </label>
-                    <input type="time" value={irrigationSchedule}
-                      onChange={e => { setIrrigationSchedule(e.target.value); sendCommand(`⏰ Schedule set to ${e.target.value}`); }}
-                      className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-                      style={{ background: 'hsl(0 0% 10%)', border: '1px solid hsl(0 0% 15%)', color: 'hsl(120 20% 96%)' }} />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1.5 flex items-center justify-between">
-                      <span className="flex items-center gap-1"><Thermometer className="w-3 h-3" /> Moisture Threshold</span>
-                      <span className="font-bold" style={{ color: 'hsl(var(--emerald))' }}>{moistureThreshold}%</span>
-                    </label>
-                    <input type="range" min="20" max="90" value={moistureThreshold}
-                      onChange={e => { setMoistureThreshold(+e.target.value); sendCommand(`📊 Threshold set to ${e.target.value}%`); }}
-                      className="w-full accent-emerald-500" />
-                  </div>
-                </div>
-
-                {/* Command Log */}
-                <div className="p-5 rounded-xl" style={{ background: 'hsl(0 0% 6%)', border: '1px solid hsl(0 0% 12%)' }}>
-                  <div className="text-sm font-medium mb-3 flex items-center gap-2">
-                    <span className="status-dot online" /> Command Log
-                  </div>
-                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                    {commandLog.map((log, i) => (
-                      <div key={i} className="text-xs py-1.5 px-2 rounded-md font-mono"
-                        style={{ background: 'hsl(0 0% 8%)', color: i === 0 ? 'hsl(var(--emerald))' : 'hsl(var(--muted-foreground))' }}>
-                        {log}
-                      </div>
-                    ))}
-                  </div>
+              {/* Device Info */}
+              <div className="p-4">
+                <h3 className="font-semibold text-base">{device.name}</h3>
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{device.description}</p>
+                <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                  <Clock className="w-3 h-3" /> Last sync: {device.lastSync}
                 </div>
               </div>
             </div>
-          </>
-        )}
+          ))}
+        </div>
+
+        {/* Expanded Device Details */}
+        {expandedDevice && (() => {
+          const device = devices.find(d => d.id === expandedDevice)!;
+          return (
+            <div className="space-y-4 animate-slide-up">
+              {/* Results Grid */}
+              <div className="glass-card p-5">
+                <h2 className="font-semibold mb-4 flex items-center gap-2">
+                  📊 Test Results — {device.name}
+                  <span className="tag emerald text-xs ml-auto">LIVE DATA</span>
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {Object.entries(device.results).map(([key, r]) => (
+                    <div key={key} className="p-3 rounded-xl" style={{ background: 'hsl(0 0% 6%)', border: '1px solid hsl(0 0% 12%)' }}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-muted-foreground capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+                        <span className="w-2 h-2 rounded-full" style={{ background: statusColors[r.status as keyof typeof statusColors] || 'hsl(var(--muted-foreground))' }} />
+                      </div>
+                      <div className="text-xl font-bold" style={{ color: statusColors[r.status as keyof typeof statusColors] || 'hsl(var(--foreground))' }}>
+                        {r.value}{typeof r.value === 'number' && r.value > 100 ? '' : key === 'ph' ? '' : key.includes('temp') ? '°C' : '%'}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{r.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* AI Advice */}
+              <div className="glass-card p-5" style={{ border: '1px solid hsl(var(--emerald) / 0.3)', background: 'hsl(145 40% 5% / 0.7)' }}>
+                <h2 className="font-semibold mb-3 flex items-center gap-2">
+                  <span className="text-lg">🤖</span> AI Analysis & Advice
+                </h2>
+                <p className="text-sm leading-relaxed" style={{ color: 'hsl(120 20% 85%)' }}>
+                  {device.aiAdvice}
+                </p>
+                <div className="flex gap-2 mt-4">
+                  <span className="tag emerald">Personalized</span>
+                  <span className="tag emerald">Updated live</span>
+                  {device.battery < 20 && <span className="tag alert">⚠️ Low Battery</span>}
+                </div>
+              </div>
+
+              {/* Control Allowances */}
+              <div className="glass-card p-5">
+                <h2 className="font-semibold mb-4 flex items-center gap-2">
+                  <Settings className="w-4 h-4" style={{ color: 'hsl(var(--emerald))' }} />
+                  Device Controls & Permissions
+                </h2>
+                <div className="space-y-3">
+                  {device.controls.map(ctrl => {
+                    const enabled = controlStates[device.id]?.[ctrl.id] ?? ctrl.enabled;
+                    return (
+                      <div key={ctrl.id} className="flex items-center justify-between p-4 rounded-xl"
+                        style={{ background: 'hsl(0 0% 6%)', border: `1px solid ${enabled ? 'hsl(var(--emerald) / 0.3)' : 'hsl(0 0% 12%)'}` }}>
+                        <div>
+                          <div className="text-sm font-medium flex items-center gap-2">
+                            {enabled ? <CheckCircle className="w-4 h-4" style={{ color: 'hsl(var(--emerald))' }} /> : <Shield className="w-4 h-4 text-muted-foreground" />}
+                            {ctrl.label}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">{ctrl.desc}</p>
+                        </div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleControl(device.id, ctrl.id); }}
+                          className="w-12 h-6 rounded-full flex items-center transition-all px-0.5"
+                          style={{
+                            background: enabled ? 'hsl(var(--emerald))' : 'hsl(0 0% 25%)',
+                            justifyContent: enabled ? 'flex-end' : 'flex-start',
+                          }}>
+                          <div className="w-5 h-5 rounded-full bg-white shadow-sm" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </DashboardLayout>
   );
