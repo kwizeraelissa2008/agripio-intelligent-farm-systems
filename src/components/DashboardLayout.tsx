@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import VoiceAssistant from './VoiceAssistant';
 import NotificationPanel from './NotificationPanel';
+import IPLessonModal from './IPLessonModal';
 
 // Role-specific nav items
 const getNavItems = (role: string) => {
@@ -265,6 +266,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
       {/* Voice Assistant */}
       {showVoice && <VoiceAssistant onClose={() => setShowVoice(false)} />}
+
+      {/* Daily IP Lesson Popup */}
+      <IPLessonModal />
 
       {/* Role-specific FAB */}
       {!showVoice && (

@@ -266,6 +266,11 @@ export default function FarmerDashboard() {
             </div>
           </div>
         </div>
+        {/* Copyright */}
+        <div className="text-center py-3">
+          <p className="text-xs font-medium" style={{ color: 'hsl(var(--emerald))' }}>© 2026 AgriPio — Original Content. Reposting Prohibited.</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">Smart Bio-Digital Agricultural Ecosystem</p>
+        </div>
       </div>
     </DashboardLayout>
   );
