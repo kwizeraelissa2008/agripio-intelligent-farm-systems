@@ -1,7 +1,6 @@
 /**
- * AgriPio IoT Smart Devices — Unified 3-Chamber Interface
- * Senior IoT/UI/UX redesign: Health Hero, real-time cards, virtual simulation,
- * AI advice, heatmaps, farming timeline, plant scanner
+ * AgriPio IoT Smart Devices — 2-Chamber System (Soil + Fertilizer)
+ * No images, pure card-based UI with rich AI advice
  * © 2026 AgriPio — All rights reserved.
  */
 import { useState, useRef, useEffect, useCallback } from 'react';
@@ -9,81 +8,42 @@ import DashboardLayout from '@/components/DashboardLayout';
 import IPWatermark from '@/components/IPWatermark';
 import { useApp } from '@/contexts/AppContext';
 import {
-  Cpu, Wifi, WifiOff, Thermometer, Droplets, Sun, Wind,
-  Shield, Clock, AlertTriangle, CheckCircle, Settings, Camera,
-  Leaf, Zap, Eye, X, Loader2, RefreshCw, Play, Activity,
-  BarChart3, TrendingUp, BatteryMedium, Radio, Gauge
+  Wifi, WifiOff, Shield, Clock, CheckCircle, Settings, Camera,
+  Leaf, Eye, X, Loader2, RefreshCw, Play, Activity,
+  TrendingUp, BatteryMedium, Radio, Sparkles, Lightbulb,
+  Droplets, ThermometerSun, FlaskConical, Gauge, Zap,
+  ShieldCheck, AlertTriangle, Bug, CloudRain, Sprout
 } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
 
-/* ── Utility: simulate real-time jitter ── */
-const jitter = (base: number, range: number) =>
-  +(base + (Math.random() - 0.5) * range).toFixed(1);
+const jitter = (base: number, range: number) => +(base + (Math.random() - 0.5) * range).toFixed(1);
+const buildHistory = (base: number, range: number, len = 12) => Array.from({ length: len }, () => jitter(base, range));
 
-/* ── Device data model ── */
 interface SensorReading {
-  value: number;
-  unit: string;
-  status: 'optimal' | 'good' | 'moderate' | 'low' | 'critical' | 'safe';
-  label: string;
-  labelRw: string;
-  desc: string;
-  descRw: string;
-  icon: string;
-  min: number;
-  max: number;
-  history: number[];
+  value: number; unit: string; status: 'optimal' | 'good' | 'moderate' | 'low' | 'critical' | 'safe';
+  label: string; labelRw: string; desc: string; descRw: string; icon: string; min: number; max: number; history: number[];
 }
-
-interface DeviceControl {
-  id: string;
-  label: string;
-  labelRw: string;
-  desc: string;
-  descRw: string;
-  enabled: boolean;
-}
-
+interface DeviceControl { id: string; label: string; labelRw: string; desc: string; descRw: string; enabled: boolean; }
 interface Device {
-  id: string;
-  name: string;
-  nameRw: string;
-  description: string;
-  descRw: string;
-  image: string;
-  chamber: 'soil' | 'crop' | 'fertilizer';
-  chamberColor: string;
-  chamberIcon: string;
-  status: 'online' | 'offline';
-  battery: number;
-  lastSync: string;
-  readings: Record<string, SensorReading>;
-  aiAdvice: string;
-  aiAdviceRw: string;
+  id: string; name: string; nameRw: string; description: string; descRw: string;
+  chamber: 'soil' | 'fertilizer'; chamberIcon: string; status: 'online' | 'offline';
+  battery: number; lastSync: string; readings: Record<string, SensorReading>;
   controls: DeviceControl[];
 }
-
-const buildHistory = (base: number, range: number, len = 12) =>
-  Array.from({ length: len }, () => jitter(base, range));
 
 const initialDevices: Device[] = [
   {
     id: 'AGR-001', name: 'Soil Chamber Sensor', nameRw: "Senseur y'Ubutaka",
-    description: 'Monitors soil pH, moisture, temperature, and NPK levels in real-time.',
-    descRw: "Igenzura pH y'ubutaka, ubuhehere, ubushyuhe, n'ibipimo bya NPK.",
-    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&h=400&fit=crop',
-    chamber: 'soil', chamberColor: 'var(--emerald)', chamberIcon: '🌍',
-    status: 'online', battery: 87, lastSync: '2 min ago',
+    description: 'Monitors soil pH, moisture, temperature, and NPK levels in real-time for precision agriculture.',
+    descRw: "Igenzura pH y'ubutaka, ubuhehere, ubushyuhe, n'ibipimo bya NPK mu gihe nyacyo.",
+    chamber: 'soil', chamberIcon: '🌍', status: 'online', battery: 87, lastSync: '2 min ago',
     readings: {
-      ph: { value: 6.2, unit: 'pH', status: 'optimal', label: 'Soil pH', labelRw: 'pH y\'Ubutaka', desc: 'Slightly acidic — ideal for most crops', descRw: 'Bitose gato — byiza ku bihingwa byinshi', icon: '⚗️', min: 0, max: 14, history: buildHistory(6.2, 0.4) },
-      moisture: { value: 68, unit: '%', status: 'good', label: 'Moisture', labelRw: 'Ubuhehere', desc: '68% saturation — adequate hydration', descRw: '68% — ubuhehere buhagije', icon: '💧', min: 0, max: 100, history: buildHistory(68, 10) },
-      temperature: { value: 24, unit: '°C', status: 'optimal', label: 'Temperature', labelRw: 'Ubushyuhe', desc: '24°C — perfect growing temperature', descRw: '24°C — ubushyuhe bwiza', icon: '🌡️', min: 0, max: 50, history: buildHistory(24, 3) },
-      nitrogen: { value: 45, unit: 'mg/kg', status: 'low', label: 'Nitrogen (N)', labelRw: 'Azote (N)', desc: '45 mg/kg — below recommended', descRw: "45 mg/kg — munsi y'urwego rusabwa", icon: '🧪', min: 0, max: 200, history: buildHistory(45, 8) },
-      phosphorus: { value: 32, unit: 'mg/kg', status: 'moderate', label: 'Phosphorus (P)', labelRw: 'Fosifore (P)', desc: '32 mg/kg — acceptable range', descRw: "32 mg/kg — urwego rwemewe", icon: '🔬', min: 0, max: 100, history: buildHistory(32, 6) },
-      potassium: { value: 180, unit: 'mg/kg', status: 'good', label: 'Potassium (K)', labelRw: 'Potasiyumu (K)', desc: '180 mg/kg — sufficient supply', descRw: '180 mg/kg — ibihagije', icon: '⚡', min: 0, max: 300, history: buildHistory(180, 15) },
+      ph: { value: 6.2, unit: 'pH', status: 'optimal', label: 'Soil pH', labelRw: "pH y'Ubutaka", desc: 'Slightly acidic — ideal for most crops', descRw: 'Bitose gato — byiza ku bihingwa byinshi', icon: '⚗️', min: 0, max: 14, history: buildHistory(6.2, 0.4) },
+      moisture: { value: 68, unit: '%', status: 'good', label: 'Moisture', labelRw: 'Ubuhehere', desc: '68% saturation — adequate', descRw: '68% — ubuhehere buhagije', icon: '💧', min: 0, max: 100, history: buildHistory(68, 10) },
+      temperature: { value: 24, unit: '°C', status: 'optimal', label: 'Temperature', labelRw: 'Ubushyuhe', desc: '24°C — perfect growing temp', descRw: '24°C — ubushyuhe bwiza', icon: '🌡️', min: 0, max: 50, history: buildHistory(24, 3) },
+      nitrogen: { value: 45, unit: 'mg/kg', status: 'low', label: 'Nitrogen (N)', labelRw: 'Azote (N)', desc: '45 mg/kg — below recommended', descRw: "45 mg/kg — munsi y'urwego", icon: '🧪', min: 0, max: 200, history: buildHistory(45, 8) },
+      phosphorus: { value: 32, unit: 'mg/kg', status: 'moderate', label: 'Phosphorus (P)', labelRw: 'Fosifore (P)', desc: '32 mg/kg — acceptable', descRw: '32 mg/kg — rwemewe', icon: '🔬', min: 0, max: 100, history: buildHistory(32, 6) },
+      potassium: { value: 180, unit: 'mg/kg', status: 'good', label: 'Potassium (K)', labelRw: 'Potasiyumu (K)', desc: '180 mg/kg — sufficient', descRw: '180 mg/kg — ibihagije', icon: '⚡', min: 0, max: 300, history: buildHistory(180, 15) },
     },
-    aiAdvice: 'Your soil is slightly nitrogen-deficient (45 mg/kg vs. recommended 60+). Apply 40kg/ha of organic compost within 5 days. pH 6.2 is excellent for maize and beans. Moisture at 68% is adequate — no additional watering needed this week. Consider adding mulch to retain moisture during dry spells.',
-    aiAdviceRw: "Ubutaka bwawe bufite azote nke (45 mg/kg). Shyiraho 40kg/ha ya compost mu minsi 5. pH ya 6.2 ni nziza ku ibigori n'ibishyimbo. Ubuhehere kuri 68% buhagije — nta mazi yiyongera asabwa iki cyumweru.",
     controls: [
       { id: 'data_logging', label: 'Data Logging', labelRw: 'Kubika Amakuru', desc: 'Record every 15 min', descRw: 'Andika buri minota 15', enabled: true },
       { id: 'alerts', label: 'Smart Alerts', labelRw: 'Ubutumwa Bwenge', desc: 'Out-of-range notifications', descRw: 'Menyeshwa ibipimo byavuye', enabled: true },
@@ -91,54 +51,86 @@ const initialDevices: Device[] = [
     ],
   },
   {
-    id: 'AGR-002', name: 'Crop Health Monitor', nameRw: "Igenzura ry'Ubuzima bw'Ibihingwa",
-    description: 'Analyzes crop health scores, nutrient deficiency, and growth patterns.',
-    descRw: "Isesengura ubuzima bw'ibihingwa, intungamubiri, n'uburyo bwo gukura.",
-    image: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=600&h=400&fit=crop',
-    chamber: 'crop', chamberColor: 'var(--emerald-accent)', chamberIcon: '🌿',
-    status: 'online', battery: 62, lastSync: '5 min ago',
-    readings: {
-      healthScore: { value: 82, unit: '/100', status: 'good', label: 'Health Score', labelRw: 'Amanota y\'Ubuzima', desc: 'Crops are thriving', descRw: 'Ibihingwa birimo bikura neza', icon: '💚', min: 0, max: 100, history: buildHistory(82, 5) },
-      growthRate: { value: 3.2, unit: 'cm/day', status: 'optimal', label: 'Growth Rate', labelRw: 'Urwego rwo Gukura', desc: '15% above average', descRw: 'Hejuru 15%', icon: '📈', min: 0, max: 8, history: buildHistory(3.2, 0.6) },
-      leafColor: { value: 88, unit: '%', status: 'good', label: 'Leaf Green Index', labelRw: 'Ibara ry\'Ibabi', desc: 'Healthy chlorophyll', descRw: 'Ibimera byiza', icon: '🍃', min: 0, max: 100, history: buildHistory(88, 4) },
-      stressLevel: { value: 15, unit: '%', status: 'good', label: 'Stress Level', labelRw: 'Urwego rw\'Ihangayika', desc: 'Minimal stress', descRw: 'Gahoro gahoro', icon: '🛡️', min: 0, max: 100, history: buildHistory(15, 5) },
-      deficiency: { value: 22, unit: '/100', status: 'moderate', label: 'Deficiency Index', labelRw: 'Intungamubiri Nke', desc: 'Minor nutrient gaps', descRw: 'Ibice bike', icon: '🔎', min: 0, max: 100, history: buildHistory(22, 4) },
-      pestRisk: { value: 8, unit: '%', status: 'optimal', label: 'Pest Risk', labelRw: 'Ibyago by\'Ibyonnyi', desc: 'Very low risk', descRw: 'Ibyago bike cyane', icon: '🐛', min: 0, max: 100, history: buildHistory(8, 3) },
-    },
-    aiAdvice: 'Crops are in excellent health (82/100). Minor nutrient deficiency (index 22) — apply foliar spray with zinc + boron within 3 days. Growth rate of 3.2cm/day is 15% above seasonal average. No pest treatment needed at this time.',
-    aiAdviceRw: "Ibihingwa bifite ubuzima bwiza (82/100). Intungamubiri nke (22) — shyiraho imiti ifite zinc na boron mu minsi 3. Gukura 3.2cm/umunsi ni hejuru 15%.",
-    controls: [
-      { id: 'daily_scan', label: 'Daily Scan', labelRw: 'Igenzura rya Buri Munsi', desc: 'Auto assessment each morning', descRw: 'Igenzura bwikora buri gitondo', enabled: true },
-      { id: 'growth_tracking', label: 'Growth Tracking', labelRw: 'Gukurikirana Gukura', desc: 'Track height & canopy', descRw: 'Kurikirana uburebure', enabled: true },
-      { id: 'night_mode', label: 'Night Mode', labelRw: 'Ijoro', desc: 'Infrared monitoring', descRw: 'Igenzura infrarouge', enabled: false },
-    ],
-  },
-  {
-    id: 'AGR-003', name: 'Fertilizer Analyzer', nameRw: "Isesengura ry'Ifumbire",
-    description: 'Tests fertilizer compatibility, concentration safety, and nutrient release rates.',
+    id: 'AGR-002', name: 'Fertilizer Analyzer', nameRw: "Isesengura ry'Ifumbire",
+    description: 'Tests fertilizer compatibility, concentration safety, and nutrient release rates for optimal application.',
     descRw: "Isuzuma ibihuje by'ifumbire, umutekano w'ibipimo, n'uburyo bwo gutanga intungamubiri.",
-    image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&h=400&fit=crop',
-    chamber: 'fertilizer', chamberColor: 'var(--gold)', chamberIcon: '🧬',
-    status: 'offline', battery: 12, lastSync: '3h ago',
+    chamber: 'fertilizer', chamberIcon: '🧬', status: 'offline', battery: 12, lastSync: '3h ago',
     readings: {
-      compatibility: { value: 91, unit: '%', status: 'good', label: 'Soil Compatibility', labelRw: 'Guhuje n\'Ubutaka', desc: '91% compatible', descRw: "91% bihuje n'ubutaka", icon: '✅', min: 0, max: 100, history: buildHistory(91, 3) },
-      concentration: { value: 78, unit: '%', status: 'safe', label: 'Concentration', labelRw: 'Ibipimo', desc: 'Safe concentration level', descRw: 'Ibipimo bikomeye', icon: '🧫', min: 0, max: 100, history: buildHistory(78, 5) },
-      releaseRate: { value: 65, unit: '%', status: 'moderate', label: 'Release Rate', labelRw: 'Igipimo cyo Gutanga', desc: 'Medium-slow release', descRw: '65% — hagati', icon: '⏱️', min: 0, max: 100, history: buildHistory(65, 8) },
-      npkBalance: { value: 85, unit: '/100', status: 'good', label: 'NPK Balance', labelRw: 'NPK Ihagije', desc: 'NPK 20-10-10 balanced', descRw: 'NPK 20-10-10 bihagije', icon: '⚖️', min: 0, max: 100, history: buildHistory(85, 4) },
-      organicContent: { value: 42, unit: '%', status: 'moderate', label: 'Organic Content', labelRw: 'Ibintu bya Kamere', desc: '42% organic matter', descRw: '42% kamere', icon: '🌱', min: 0, max: 100, history: buildHistory(42, 6) },
+      compatibility: { value: 91, unit: '%', status: 'good', label: 'Soil Compatibility', labelRw: "Guhuje n'Ubutaka", desc: '91% compatible', descRw: "91% bihuje n'ubutaka", icon: '✅', min: 0, max: 100, history: buildHistory(91, 3) },
+      concentration: { value: 78, unit: '%', status: 'safe', label: 'Concentration', labelRw: 'Ibipimo', desc: 'Safe level', descRw: 'Ibipimo bikomeye', icon: '🧫', min: 0, max: 100, history: buildHistory(78, 5) },
+      releaseRate: { value: 65, unit: '%', status: 'moderate', label: 'Release Rate', labelRw: 'Igipimo cyo Gutanga', desc: 'Medium-slow', descRw: '65% — hagati', icon: '⏱️', min: 0, max: 100, history: buildHistory(65, 8) },
+      npkBalance: { value: 85, unit: '/100', status: 'good', label: 'NPK Balance', labelRw: 'NPK Ihagije', desc: 'NPK 20-10-10', descRw: 'NPK 20-10-10 bihagije', icon: '⚖️', min: 0, max: 100, history: buildHistory(85, 4) },
+      organicContent: { value: 42, unit: '%', status: 'moderate', label: 'Organic Content', labelRw: 'Ibintu bya Kamere', desc: '42% organic', descRw: '42% kamere', icon: '🌱', min: 0, max: 100, history: buildHistory(42, 6) },
       effectiveness: { value: 88, unit: '%', status: 'good', label: 'Effectiveness', labelRw: 'Imikorere', desc: '88% effective', descRw: '88% imikorere', icon: '🎯', min: 0, max: 100, history: buildHistory(88, 4) },
     },
-    aiAdvice: 'Fertilizer blend (NPK 20-10-10) is 91% compatible with your soil. Organic content at 42% is below ideal — mix with compost at 3:1 ratio for better results. ⚠️ Battery critically low at 12% — please charge the device immediately to avoid data loss.',
-    aiAdviceRw: "Ifumbire (NPK 20-10-10) ihuje 91% n'ubutaka bwawe. Ibintu bya kamere kuri 42% — vanga na compost 3:1. ⚠️ Bateri iri hasi cyane kuri 12% — siga vuba.",
     controls: [
-      { id: 'auto_test', label: 'Auto Testing', labelRw: 'Isuzumwa Bwikora', desc: 'Test new batches automatically', descRw: 'Isuzuma bwikora', enabled: false },
-      { id: 'mixing_guide', label: 'Mixing Guide', labelRw: 'Kuvanga', desc: 'AI-optimized mixing ratios', descRw: 'AI itanga igipimo', enabled: true },
-      { id: 'safety_check', label: 'Safety Monitor', labelRw: 'Umutekano', desc: 'Alert if concentration is high', descRw: 'Menyesha niba ibipimo byinshi', enabled: true },
+      { id: 'auto_test', label: 'Auto Testing', labelRw: 'Isuzumwa Bwikora', desc: 'Test new batches auto', descRw: 'Isuzuma bwikora', enabled: false },
+      { id: 'mixing_guide', label: 'Mixing Guide', labelRw: 'Kuvanga', desc: 'AI mixing ratios', descRw: 'AI itanga igipimo', enabled: true },
+      { id: 'safety_check', label: 'Safety Monitor', labelRw: 'Umutekano', desc: 'Concentration alerts', descRw: 'Menyesha ibipimo byinshi', enabled: true },
     ],
   },
 ];
 
-/* ── Status color mapping ── */
+/* AI Advice cards — descriptive, multi-topic */
+const aiAdviceCards = [
+  {
+    icon: Droplets, title: 'Soil Moisture Strategy', titleRw: 'Ingamba z\'Ubuhehere',
+    advice: 'Your soil moisture at 68% is adequate for current crops. During the next dry period (expected in 5 days), apply mulch around root zones to retain moisture. Avoid overwatering — it reduces oxygen availability to roots and can promote fungal diseases.',
+    adviceRw: 'Ubuhehere bw\'ubutaka kuri 68% buhagije. Mu gihe cy\'amapfa (hasigaye iminsi 5), shyira ibikoresho ku mashami kugira ngo ubuhehere bukomeze. Irinde gusuka amazi menshi.',
+    gradient: 'linear-gradient(135deg, hsl(200 80% 15%), hsl(200 60% 8%))',
+    border: 'hsl(200 80% 40% / 0.4)', accent: 'hsl(200 80% 55%)', tag: 'Moisture'
+  },
+  {
+    icon: FlaskConical, title: 'Nitrogen Deficiency Alert', titleRw: 'Azote Nke',
+    advice: 'Nitrogen is at 45 mg/kg — 25% below the recommended 60 mg/kg threshold for maize. Apply 40kg/ha of organic compost or well-aged manure within the next 5 days. Split application (20kg now + 20kg in 2 weeks) yields better absorption rates and reduces runoff loss.',
+    adviceRw: 'Azote iri kuri 45 mg/kg — munsi 25% y\'urwego rusabwa rwa 60 mg/kg ku ibigori. Shyiraho 40kg/ha ya compost mu minsi 5. Igabanyemo kabiri (20kg ubu + 20kg mu byumweru 2) bituma byinjira neza.',
+    gradient: 'linear-gradient(135deg, hsl(45 80% 15%), hsl(45 60% 8%))',
+    border: 'hsl(45 80% 50% / 0.4)', accent: 'hsl(45 80% 55%)', tag: 'Nutrition'
+  },
+  {
+    icon: ThermometerSun, title: 'Temperature & Growth', titleRw: 'Ubushyuhe n\'Gukura',
+    advice: 'Soil temperature at 24°C is in the optimal range (20-28°C) for tropical crops. Night temperatures are dropping to ~18°C which is beneficial for starch accumulation in tubers. No intervention needed — your crops are in an ideal thermal environment for the next 7 days.',
+    adviceRw: 'Ubushyuhe bw\'ubutaka kuri 24°C buri mu rwego rwiza (20-28°C) ku bihingwa byo mu turere dushyuha. Nta kintu gisabwa — ibihingwa byawe biri mu buzima bwiza.',
+    gradient: 'linear-gradient(135deg, hsl(15 70% 15%), hsl(15 50% 8%))',
+    border: 'hsl(15 70% 45% / 0.4)', accent: 'hsl(15 70% 55%)', tag: 'Climate'
+  },
+  {
+    icon: Bug, title: 'Pest & Disease Prevention', titleRw: 'Kwirinda Ibyonnyi',
+    advice: 'Current humidity (72%) combined with warm temperatures creates moderate risk for fungal infections, particularly late blight on tomatoes and leaf rust on beans. Inspect lower leaves for early signs. Use companion planting (marigolds near tomatoes) and ensure adequate spacing between plants for air circulation.',
+    adviceRw: 'Ubuhehere bwa none (72%) hamwe n\'ubushyuhe bishobora gutera indwara z\'ibihingwa. Suzuma amababi yo hasi. Koresha uburyo bwo gutera hamwe (marigolds hafi ya tomate) kandi usige umwanya uhagije.',
+    gradient: 'linear-gradient(135deg, hsl(0 60% 15%), hsl(0 40% 8%))',
+    border: 'hsl(0 60% 45% / 0.4)', accent: 'hsl(0 60% 55%)', tag: 'Protection'
+  },
+  {
+    icon: Sprout, title: 'Planting Calendar Advice', titleRw: 'Inama z\'Igihe cyo Gutera',
+    advice: 'Based on your soil conditions (pH 6.2, good potassium), this is an excellent time to plant beans, maize, or sorghum. For root vegetables like cassava, wait 2 more weeks for soil to warm slightly. Start seedbeds for tomatoes and peppers now — they\'ll be ready for transplant in 3-4 weeks.',
+    adviceRw: 'Hashingiwe ku mimerere y\'ubutaka (pH 6.2, potasiyumu nziza), ibi ni igihe cyiza cyo gutera ibishyimbo, ibigori, cyangwa amasaka. Ku bihingwa by\'imizi nka manyioki, tegereza ibyumweru 2.',
+    gradient: 'linear-gradient(135deg, hsl(145 60% 12%), hsl(145 40% 6%))',
+    border: 'hsl(145 60% 40% / 0.4)', accent: 'hsl(var(--emerald))', tag: 'Planning'
+  },
+  {
+    icon: Gauge, title: 'Fertilizer Application Guide', titleRw: 'Amabwiriza y\'Ifumbire',
+    advice: 'Your fertilizer blend (NPK 20-10-10) is 91% compatible with current soil. Organic content at 42% is below ideal 55%. Mix with compost at 3:1 ratio. Apply in the morning when soil is moist for best absorption. Avoid fertilizing before heavy rain — nutrients will wash away and pollute waterways.',
+    adviceRw: 'Ifumbire yawe (NPK 20-10-10) ihuje 91% n\'ubutaka. Ibintu bya kamere kuri 42% ni munsi ya 55% ikwiye. Vanga na compost kuri 3:1. Shyiraho mu gitondo iyo ubutaka bufite ubuhehere.',
+    gradient: 'linear-gradient(135deg, hsl(270 50% 15%), hsl(270 30% 8%))',
+    border: 'hsl(270 50% 45% / 0.4)', accent: 'hsl(270 50% 60%)', tag: 'Fertilizer'
+  },
+  {
+    icon: CloudRain, title: 'Weather-Smart Farming', titleRw: 'Ubuhinzi Bwenge bw\'Ikirere',
+    advice: 'Heavy rainfall expected in 2 days. Prepare drainage channels in low-lying fields. Delay any fertilizer application until after the rain passes. Harvest any mature crops before the rain to prevent post-harvest losses. Mulching now will protect topsoil from erosion during downpours.',
+    adviceRw: 'Imvura nyinshi iteganijwe mu minsi 2. Tegura imiyoboro y\'amazi mu mirima. Tegereza gushyira ifumbire nyuma y\'imvura. Sarura ibihingwa byeze mbere y\'imvura.',
+    gradient: 'linear-gradient(135deg, hsl(210 60% 15%), hsl(210 40% 8%))',
+    border: 'hsl(210 60% 45% / 0.4)', accent: 'hsl(210 60% 55%)', tag: 'Weather'
+  },
+  {
+    icon: ShieldCheck, title: 'Soil Health Long-term Plan', titleRw: 'Ingamba z\'Ubuzima bw\'Ubutaka',
+    advice: 'Your soil health is trending positively (+6% this month). To maintain this trajectory: rotate crops every season (legumes after cereals to fix nitrogen naturally), add green manure cover crops during fallow periods, and minimize tillage to preserve soil structure and microbial communities.',
+    adviceRw: 'Ubuzima bw\'ubutaka bwawe burimo bwiyongera (+6% uku kwezi). Kugira ngo ukomeze: hindura ibihingwa buri gihembwe, ongeraho ibimera bitwikira, kandi ugabanye guhinga kugira ngo uburinganire bw\'ubutaka bukomeze.',
+    gradient: 'linear-gradient(135deg, hsl(145 50% 12%), hsl(160 40% 6%))',
+    border: 'hsl(160 50% 40% / 0.4)', accent: 'hsl(160 50% 50%)', tag: 'Long-term'
+  },
+];
+
 const statusMeta: Record<string, { color: string; label: string; border: string }> = {
   optimal: { color: 'hsl(var(--emerald))', label: 'Optimal', border: 'hsl(var(--emerald) / 0.5)' },
   good: { color: 'hsl(var(--emerald))', label: 'Good', border: 'hsl(var(--emerald) / 0.4)' },
@@ -148,14 +140,12 @@ const statusMeta: Record<string, { color: string; label: string; border: string 
   critical: { color: 'hsl(var(--alert))', label: 'Critical', border: 'hsl(var(--alert) / 0.5)' },
 };
 
-/* ── Plant scanner results ── */
 const plantScanResults = [
-  { status: 'Healthy', color: 'hsl(var(--emerald))', icon: '🌿', advice: 'Your plant looks healthy! Continue providing adequate sunlight and consistent moisture.', adviceRw: 'Igihingwa cyawe kirasa neza! Komeza gutanga urumuri n\'amazi ahagije.' },
-  { status: 'Nutrient Deficiency', color: 'hsl(var(--warning))', icon: '🍂', advice: 'Possible nutrient deficiency detected. Consider adding organic compost. Ensure soil pH is 6.0-7.0.', adviceRw: 'Hashobora kuba hari intungamubiri nke. Tekereza kongeraho compost.' },
-  { status: 'Pest Damage', color: 'hsl(var(--alert))', icon: '🐛', advice: 'Signs of pest activity. Inspect leaves closely. Consider natural deterrents like neem oil or companion planting.', adviceRw: "Ibimenyetso by'ibyonnyi. Suzuma amababi. Tekereza gukoresha amavuta ya neem." },
+  { status: 'Healthy', color: 'hsl(var(--emerald))', icon: '🌿', advice: 'Plant looks healthy! Continue adequate sunlight and moisture.', adviceRw: 'Igihingwa kirasa neza! Komeza urumuri n\'amazi.' },
+  { status: 'Nutrient Deficiency', color: 'hsl(var(--warning))', icon: '🍂', advice: 'Possible nutrient deficiency. Add organic compost. pH should be 6.0-7.0.', adviceRw: 'Hashobora kuba intungamubiri nke. Ongeraho compost.' },
+  { status: 'Pest Damage', color: 'hsl(var(--alert))', icon: '🐛', advice: 'Signs of pest activity. Try neem oil or companion planting.', adviceRw: "Ibimenyetso by'ibyonnyi. Koresha amavuta ya neem." },
 ];
 
-/* ── Farming Timeline ── */
 const farmingTimeline = [
   { day: 0, label: 'Soil Prep', labelRw: 'Gutegura Ubutaka', status: 'done', icon: '🌍' },
   { day: 7, label: 'Planting', labelRw: 'Gutera', status: 'done', icon: '🌱' },
@@ -165,39 +155,18 @@ const farmingTimeline = [
   { day: 75, label: 'Harvest', labelRw: 'Gusarura', status: 'upcoming', icon: '🌾' },
 ];
 
-/* ── Mini Sparkline Component ── */
-function Sparkline({ data, color, height = 28 }: { data: number[]; color: string; height?: number }) {
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const range = max - min || 1;
-  const w = 100;
+function Sparkline({ data, color, height = 24 }: { data: number[]; color: string; height?: number }) {
+  const min = Math.min(...data); const max = Math.max(...data); const range = max - min || 1;
+  const w = 80;
   const points = data.map((v, i) => `${(i / (data.length - 1)) * w},${height - ((v - min) / range) * (height - 4)}`).join(' ');
-  return (
-    <svg width={w} height={height} className="opacity-70">
-      <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+  return <svg width={w} height={height} className="opacity-60"><polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 }
 
-/* ── Heatmap Bar ── */
-function HeatmapBar({ value, max, color }: { value: number; max: number; color: string }) {
-  const pct = Math.min((value / max) * 100, 100);
-  return (
-    <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: 'hsl(0 0% 15%)' }}>
-      <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${pct}%`, background: color }} />
-    </div>
-  );
-}
-
-/* ════════════════════════════════════════════
-   MAIN COMPONENT
-   ════════════════════════════════════════════ */
 export default function IoTDevices() {
   const { language } = useApp();
   const isRw = language === 'rw';
-
-  const [devices, setDevices] = useState<Device[]>(initialDevices);
-  const [selectedChamber, setSelectedChamber] = useState<string>('AGR-001');
+  const [devices, setDevices] = useState(initialDevices);
+  const [selectedChamber, setSelectedChamber] = useState('AGR-001');
   const [isSimulation, setIsSimulation] = useState(false);
   const [controlStates, setControlStates] = useState<Record<string, Record<string, boolean>>>(() => {
     const init: Record<string, Record<string, boolean>> = {};
@@ -210,9 +179,7 @@ export default function IoTDevices() {
   const [scanResult, setScanResult] = useState<typeof plantScanResults[0] | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const [tick, setTick] = useState(0);
 
-  /* Real-time data simulation — updates every 10 seconds */
   useEffect(() => {
     const interval = setInterval(() => {
       setDevices(prev => prev.map(d => {
@@ -227,71 +194,38 @@ export default function IoTDevices() {
         });
         return { ...d, readings: newReadings, lastSync: 'Just now' };
       }));
-      setTick(t => t + 1);
     }, 10000);
     return () => clearInterval(interval);
   }, [isSimulation]);
 
-  const toggleControl = (deviceId: string, controlId: string) => {
-    setControlStates(prev => ({ ...prev, [deviceId]: { ...prev[deviceId], [controlId]: !prev[deviceId][controlId] } }));
-  };
+  const toggleControl = (did: string, cid: string) => setControlStates(p => ({ ...p, [did]: { ...p[did], [cid]: !p[did][cid] } }));
 
-  const runNewTest = useCallback((deviceId: string) => {
-    setRunningTest(deviceId);
+  const runNewTest = useCallback((did: string) => {
+    setRunningTest(did);
     setTimeout(() => {
       setDevices(prev => prev.map(d => {
-        if (d.id !== deviceId) return d;
-        const newReadings = { ...d.readings };
-        Object.keys(newReadings).forEach(key => {
-          const r = { ...newReadings[key] };
-          r.value = jitter(r.value, (r.max - r.min) * 0.05);
-          r.value = Math.max(r.min, Math.min(r.max, r.value));
-          r.history = [...r.history.slice(1), r.value];
-          newReadings[key] = r;
-        });
-        return { ...d, readings: newReadings, lastSync: 'Just now' };
+        if (d.id !== did) return d;
+        const nr = { ...d.readings };
+        Object.keys(nr).forEach(k => { const r = { ...nr[k] }; r.value = Math.max(r.min, Math.min(r.max, jitter(r.value, (r.max - r.min) * 0.05))); r.history = [...r.history.slice(1), r.value]; nr[k] = r; });
+        return { ...d, readings: nr, lastSync: 'Just now' };
       }));
       setRunningTest(null);
     }, 3000);
   }, []);
 
-  const startScanner = async () => {
-    setShowScanner(true); setScanResult(null);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      streamRef.current = stream;
-      if (videoRef.current) videoRef.current.srcObject = stream;
-    } catch { /* Camera unavailable */ }
-  };
-
-  const handleScan = () => {
-    setScanning(true);
-    setTimeout(() => {
-      setScanResult(plantScanResults[Math.floor(Math.random() * plantScanResults.length)]);
-      setScanning(false);
-      streamRef.current?.getTracks().forEach(t => t.stop());
-    }, 2500);
-  };
-
+  const startScanner = async () => { setShowScanner(true); setScanResult(null); try { const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }); streamRef.current = s; if (videoRef.current) videoRef.current.srcObject = s; } catch {} };
+  const handleScan = () => { setScanning(true); setTimeout(() => { setScanResult(plantScanResults[Math.floor(Math.random() * plantScanResults.length)]); setScanning(false); streamRef.current?.getTracks().forEach(t => t.stop()); }, 2500); };
   const closeScanner = () => { setShowScanner(false); setScanResult(null); streamRef.current?.getTracks().forEach(t => t.stop()); };
 
-  const selectedDevice = devices.find(d => d.id === selectedChamber)!;
-
-  /* ── Overall Health Hero Score ── */
-  const overallHealth = Math.round(
-    devices.reduce((sum, d) => {
-      const vals = Object.values(d.readings);
-      const avg = vals.reduce((s, r) => s + (r.value / r.max) * 100, 0) / vals.length;
-      return sum + avg;
-    }, 0) / devices.length
-  );
+  const sel = devices.find(d => d.id === selectedChamber)!;
+  const overallHealth = Math.round(devices.reduce((s, d) => { const v = Object.values(d.readings); return s + v.reduce((a, r) => a + (r.value / r.max) * 100, 0) / v.length; }, 0) / devices.length);
   const heroColor = overallHealth >= 70 ? 'hsl(var(--emerald))' : overallHealth >= 45 ? 'hsl(var(--warning))' : 'hsl(var(--alert))';
 
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
 
-        {/* ══ HEADER ══ */}
+        {/* HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -299,237 +233,165 @@ export default function IoTDevices() {
               {isRw ? 'AgriPio Igenzura' : 'AgriPio Monitor'}
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              {isRw ? 'Sisitemu imwe y\'ubwoko 3 — Ubutaka · Ibihingwa · Ifumbire' : 'Unified 3-chamber system — Soil · Crop · Fertilizer'}
+              {isRw ? 'Sisitemu y\'ubwoko 2 — Ubutaka · Ifumbire' : '2-Chamber smart testing — Soil · Fertilizer'}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Virtual Device Toggle */}
             <button onClick={() => setIsSimulation(!isSimulation)}
               className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
-              style={{
-                background: isSimulation ? 'hsl(var(--sky) / 0.15)' : 'hsl(0 0% 10%)',
-                color: isSimulation ? 'hsl(var(--sky))' : 'hsl(var(--muted-foreground))',
-                border: `1px solid ${isSimulation ? 'hsl(var(--sky) / 0.4)' : 'hsl(0 0% 15%)'}`
-              }}>
-              <Radio className="w-3.5 h-3.5" />
-              {isSimulation ? (isRw ? 'Igikoresho Cyiyerekana' : 'Virtual Device ON') : (isRw ? 'Igikoresho Nyacyo' : 'Physical Device')}
+              style={{ background: isSimulation ? 'hsl(var(--sky) / 0.15)' : 'hsl(var(--secondary))', color: isSimulation ? 'hsl(var(--sky))' : 'hsl(var(--muted-foreground))', border: `1px solid ${isSimulation ? 'hsl(var(--sky) / 0.4)' : 'hsl(var(--border))'}` }}>
+              <Radio className="w-3.5 h-3.5" /> {isSimulation ? (isRw ? 'Cyiyerekana' : 'Virtual ON') : (isRw ? 'Nyacyo' : 'Physical')}
             </button>
-            {/* Scan Plant */}
-            <button onClick={startScanner}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold"
-              style={{ background: 'hsl(var(--emerald) / 0.15)', color: 'hsl(var(--emerald))', border: '1px solid hsl(var(--emerald) / 0.3)' }}>
-              <Camera className="w-3.5 h-3.5" /> {isRw ? 'Suzuma Igihingwa' : 'Scan Plant'}
+            <button onClick={startScanner} className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold"
+              style={{ background: 'hsl(var(--emerald) / 0.12)', color: 'hsl(var(--emerald))', border: '1px solid hsl(var(--emerald) / 0.3)' }}>
+              <Camera className="w-3.5 h-3.5" /> {isRw ? 'Suzuma' : 'Scan Plant'}
             </button>
           </div>
         </div>
 
-        {/* ══ HEALTH HERO ══ */}
-        <div className="glass-card p-6 flex flex-col sm:flex-row items-center gap-6"
-          style={{ border: `1px solid ${heroColor}30` }}>
-          {/* Geometric health indicator */}
+        {/* HEALTH HERO */}
+        <div className="rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-6"
+          style={{ background: 'linear-gradient(135deg, hsl(145 30% 8%), hsl(0 0% 5%))', border: `1px solid ${heroColor}25`, boxShadow: `0 0 60px ${heroColor}08` }}>
           <div className="relative flex-shrink-0">
-            <div className="w-28 h-28 rounded-3xl flex items-center justify-center relative"
-              style={{
-                background: `linear-gradient(135deg, ${heroColor}20, ${heroColor}05)`,
-                border: `2px solid ${heroColor}50`,
-                boxShadow: `0 0 40px ${heroColor}20`,
-              }}>
+            <div className="w-28 h-28 rounded-3xl flex items-center justify-center"
+              style={{ background: `${heroColor}12`, border: `2px solid ${heroColor}40`, boxShadow: `0 0 40px ${heroColor}15` }}>
               <span className="text-3xl font-bold" style={{ color: heroColor }}>{overallHealth}</span>
-              <span className="absolute bottom-2 text-[10px] font-semibold" style={{ color: heroColor }}>/ 100</span>
+              <span className="absolute bottom-2 text-[10px] font-semibold" style={{ color: heroColor }}>/100</span>
             </div>
             <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full animate-pulse" style={{ background: heroColor, boxShadow: `0 0 12px ${heroColor}` }} />
           </div>
           <div className="flex-1 text-center sm:text-left">
             <h2 className="text-lg font-bold">{isRw ? 'Ubuzima Rusange bw\'Imirima' : 'Overall Farm Health'}</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              {overallHealth >= 70
-                ? (isRw ? 'Imirima yawe iri mu buzima bwiza. Komeza uburyo bwawe bwo gukora.' : 'Your farm is performing well. Continue your current practices for optimal yield.')
-                : overallHealth >= 45
-                  ? (isRw ? 'Ibintu bimwe bisaba kwitabwaho. Reba inama za AI hasi.' : 'Some areas need attention. Check AI recommendations below.')
-                  : (isRw ? 'Ubuzima bw\'imirima ni bubi. Kora ibintu byihutirwa.' : 'Farm health is critical. Take immediate action on flagged issues.')}
+              {overallHealth >= 70 ? (isRw ? 'Imirima iri mu buzima bwiza.' : 'Farm is performing well. Follow AI advice below for optimization.') : (isRw ? 'Ibintu bimwe bisaba kwitabwaho.' : 'Some areas need attention. Check AI recommendations below.')}
             </p>
             <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground flex-wrap">
-              <span className="flex items-center gap-1"><Activity className="w-3 h-3" style={{ color: heroColor }} /> {isRw ? 'Ibyuka buri sec 10' : 'Updates every 10s'}</span>
-              <span className="flex items-center gap-1"><Cpu className="w-3 h-3" /> {devices.filter(d => d.status === 'online').length}/{devices.length} {isRw ? 'online' : 'online'}</span>
-              {isSimulation && <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full" style={{ background: 'hsl(var(--sky) / 0.12)', color: 'hsl(var(--sky))' }}>🔮 {isRw ? 'Igikoresho Cyiyerekana' : 'Virtual Simulation'}</span>}
+              <span className="flex items-center gap-1"><Activity className="w-3 h-3" style={{ color: heroColor }} /> {isRw ? 'Buri sec 10' : 'Every 10s'}</span>
+              <span className="flex items-center gap-1"><Wifi className="w-3 h-3" /> {devices.filter(d => d.status === 'online').length}/{devices.length} online</span>
+              {isSimulation && <span className="px-2 py-0.5 rounded-full" style={{ background: 'hsl(var(--sky) / 0.1)', color: 'hsl(var(--sky))' }}>🔮 Virtual</span>}
             </div>
           </div>
         </div>
 
-        {/* ══ 3 CHAMBER CARDS (device selector) ══ */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* 2 DEVICE CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {devices.map(device => {
             const isActive = selectedChamber === device.id;
             const online = device.status === 'online' || isSimulation;
-            const avgHealth = Math.round(Object.values(device.readings).reduce((s, r) => s + (r.value / r.max) * 100, 0) / Object.keys(device.readings).length);
-            const cardColor = avgHealth >= 70 ? 'hsl(var(--emerald))' : avgHealth >= 45 ? 'hsl(var(--warning))' : 'hsl(var(--alert))';
-
+            const avg = Math.round(Object.values(device.readings).reduce((s, r) => s + (r.value / r.max) * 100, 0) / Object.keys(device.readings).length);
+            const cc = avg >= 70 ? 'hsl(var(--emerald))' : avg >= 45 ? 'hsl(var(--warning))' : 'hsl(var(--alert))';
             return (
-              <div key={device.id}
-                className="glass-card overflow-hidden cursor-pointer transition-all duration-300"
+              <div key={device.id} onClick={() => setSelectedChamber(device.id)}
+                className="rounded-2xl p-5 cursor-pointer transition-all duration-300"
                 style={{
-                  border: isActive ? `2px solid ${cardColor}` : '1px solid hsl(0 0% 13%)',
-                  transform: isActive ? 'scale(1.01)' : 'scale(1)',
-                }}
-                onClick={() => setSelectedChamber(device.id)}>
-
-                {/* Image + status overlays */}
-                <div className="relative h-36 overflow-hidden">
-                  <img src={`${device.image}&t=${tick}`} alt={device.name} className="w-full h-full object-cover" loading="lazy" />
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, hsl(0 0% 4%), transparent 60%)' }} />
-                  <IPWatermark variant="overlay" />
-
-                  {/* Status pill */}
-                  <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold"
-                    style={{ background: online ? 'hsl(var(--emerald) / 0.9)' : 'hsl(var(--alert) / 0.85)', color: 'hsl(0 0% 4%)' }}>
-                    {online ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-                    {online ? 'LIVE' : 'OFFLINE'}
+                  background: isActive ? 'linear-gradient(135deg, hsl(145 20% 8%), hsl(0 0% 6%))' : 'hsl(var(--card))',
+                  border: isActive ? `2px solid ${cc}` : '1px solid hsl(var(--border))',
+                  boxShadow: isActive ? `0 8px 32px ${cc}15` : 'var(--shadow-card)',
+                }}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+                      style={{ background: `${cc}15`, border: `1px solid ${cc}30` }}>
+                      {device.chamberIcon}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-sm">{isRw ? device.nameRw : device.name}</h3>
+                      <p className="text-[11px] text-muted-foreground">{device.id} • {device.lastSync}</p>
+                    </div>
                   </div>
-
-                  {/* Chamber badge */}
-                  <div className="absolute top-3 left-3 px-2 py-1 rounded-full text-[10px] font-mono"
-                    style={{ background: 'hsl(0 0% 0% / 0.7)', color: cardColor }}>
-                    {device.chamberIcon} {device.id}
-                  </div>
-
-                  {/* Battery */}
-                  <div className="absolute bottom-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px]"
-                    style={{ background: 'hsl(0 0% 0% / 0.7)', color: device.battery < 20 ? 'hsl(var(--alert))' : 'hsl(var(--emerald))' }}>
-                    <BatteryMedium className="w-3 h-3" /> {device.battery}%
-                  </div>
-
-                  {/* Health ring */}
-                  <div className="absolute bottom-3 left-3 w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold"
-                    style={{ background: `${cardColor}20`, border: `1.5px solid ${cardColor}60`, color: cardColor }}>
-                    {avgHealth}
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                      style={{ background: online ? 'hsl(var(--emerald) / 0.15)' : 'hsl(var(--alert) / 0.15)', color: online ? 'hsl(var(--emerald))' : 'hsl(var(--alert))' }}>
+                      {online ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />} {online ? 'LIVE' : 'OFFLINE'}
+                    </div>
+                    <span className="text-[10px] flex items-center gap-1" style={{ color: device.battery < 20 ? 'hsl(var(--alert))' : 'hsl(var(--muted-foreground))' }}>
+                      <BatteryMedium className="w-3 h-3" /> {device.battery}%
+                    </span>
                   </div>
                 </div>
-
-                <div className="p-4 space-y-2">
-                  <h3 className="font-semibold text-sm">{isRw ? device.nameRw : device.name}</h3>
-                  <p className="text-[11px] text-muted-foreground line-clamp-2">{isRw ? device.descRw : device.description}</p>
-                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                    <Clock className="w-3 h-3" /> {device.lastSync}
-                  </div>
+                <p className="text-xs text-muted-foreground mb-3">{isRw ? device.descRw : device.description}</p>
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold"
+                    style={{ background: `${cc}15`, color: cc, border: `1px solid ${cc}30` }}>{avg}</div>
+                  <span className="text-[10px] text-muted-foreground">{isRw ? 'Amanota rusange' : 'Overall Score'}</span>
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* ══ SELECTED DEVICE DETAILS ══ */}
-        <div className="space-y-4 animate-slide-up" key={selectedDevice.id}>
-
-          {/* ── Action Bar ── */}
+        {/* SELECTED DEVICE RESULTS */}
+        <div className="space-y-4" key={sel.id}>
           <div className="flex items-center gap-2 flex-wrap">
             <h2 className="text-lg font-bold flex items-center gap-2 flex-1">
-              <span className="text-xl">{selectedDevice.chamberIcon}</span>
-              {isRw ? selectedDevice.nameRw : selectedDevice.name}
+              <span className="text-xl">{sel.chamberIcon}</span> {isRw ? sel.nameRw : sel.name} — {isRw ? 'Ibisubizo' : 'Results'}
             </h2>
-            <button
-              onClick={() => runNewTest(selectedDevice.id)}
-              disabled={runningTest === selectedDevice.id}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
+            <button onClick={() => runNewTest(sel.id)} disabled={runningTest === sel.id}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold"
               style={{ background: 'hsl(var(--emerald) / 0.12)', color: 'hsl(var(--emerald))', border: '1px solid hsl(var(--emerald) / 0.3)' }}>
-              {runningTest === selectedDevice.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-              {runningTest === selectedDevice.id ? (isRw ? 'Birimo...' : 'Testing...') : (isRw ? 'Isuzumwa Rishya' : 'Run New Test')}
+              {runningTest === sel.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+              {runningTest === sel.id ? (isRw ? 'Birimo...' : 'Testing...') : (isRw ? 'Isuzumwa Rishya' : 'Run Test')}
             </button>
-            <button
-              onClick={() => { setDevices(prev => prev.map(d => d.id === selectedDevice.id ? { ...d, lastSync: 'Just now' } : d)); }}
+            <button onClick={() => setDevices(p => p.map(d => d.id === sel.id ? { ...d, lastSync: 'Just now' } : d))}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium"
-              style={{ background: 'hsl(0 0% 10%)', border: '1px solid hsl(0 0% 15%)' }}>
+              style={{ background: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))' }}>
               <RefreshCw className="w-3 h-3" /> {isRw ? 'Kuvugurura' : 'Refresh'}
             </button>
           </div>
 
-          {/* ── SENSOR READING CARDS (2x3 quadrant) ── */}
+          {/* Sensor cards */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {Object.entries(selectedDevice.readings).map(([key, r]) => {
-              const meta = statusMeta[r.status] || statusMeta.moderate;
+            {Object.entries(sel.readings).map(([key, r]) => {
+              const m = statusMeta[r.status] || statusMeta.moderate;
               return (
-                <div key={key} className="p-4 rounded-2xl transition-all hover:scale-[1.02]"
-                  style={{
-                    background: 'hsl(0 0% 6%)',
-                    border: `1.5px solid ${meta.border}`,
-                    boxShadow: `inset 0 1px 0 ${meta.border}`,
-                  }}>
-                  {/* Top row: icon + label + status dot */}
+                <div key={key} className="rounded-2xl p-4 transition-all hover:scale-[1.02]"
+                  style={{ background: 'hsl(var(--card))', border: `1.5px solid ${m.border}` }}>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm">{r.icon}</span>
                       <span className="text-[11px] text-muted-foreground font-medium">{isRw ? r.labelRw : r.label}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full" style={{ background: meta.color, boxShadow: `0 0 6px ${meta.color}` }} />
-                      <span className="text-[9px] font-bold uppercase" style={{ color: meta.color }}>{meta.label}</span>
+                      <div className="w-2 h-2 rounded-full" style={{ background: m.color, boxShadow: `0 0 6px ${m.color}` }} />
+                      <span className="text-[9px] font-bold uppercase" style={{ color: m.color }}>{m.label}</span>
                     </div>
                   </div>
-
-                  {/* Value */}
-                  <div className="flex items-baseline gap-1 mb-1.5">
-                    <span className="text-2xl font-bold" style={{ color: meta.color }}>{r.value}</span>
+                  <div className="flex items-baseline gap-1 mb-2">
+                    <span className="text-2xl font-bold" style={{ color: m.color }}>{r.value}</span>
                     <span className="text-xs text-muted-foreground">{r.unit}</span>
                   </div>
-
-                  {/* Heatmap bar */}
-                  <HeatmapBar value={r.value} max={r.max} color={meta.color} />
-
-                  {/* Sparkline trend */}
-                  <div className="mt-2">
-                    <Sparkline data={r.history} color={meta.color} height={24} />
+                  <div className="w-full h-1.5 rounded-full overflow-hidden mb-2" style={{ background: 'hsl(var(--muted))' }}>
+                    <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${Math.min((r.value / r.max) * 100, 100)}%`, background: m.color }} />
                   </div>
-
-                  {/* Description */}
-                  <p className="text-[10px] text-muted-foreground mt-1.5 leading-snug">{isRw ? r.descRw : r.desc}</p>
+                  <Sparkline data={r.history} color={m.color} />
+                  <p className="text-[10px] text-muted-foreground mt-1.5">{isRw ? r.descRw : r.desc}</p>
                 </div>
               );
             })}
           </div>
 
-          {/* ── AI ANALYSIS & ADVICE ── */}
-          <div className="glass-card p-5 space-y-3"
-            style={{ border: '1px solid hsl(var(--emerald) / 0.3)', background: 'hsl(145 30% 5% / 0.7)' }}>
-            <h3 className="font-semibold flex items-center gap-2">
-              <span className="w-8 h-8 rounded-lg flex items-center justify-center text-sm"
-                style={{ background: 'hsl(var(--emerald) / 0.15)' }}>🤖</span>
-              {isRw ? 'Isesengura n\'Inama za AI' : 'AI Analysis & Advice'}
-              <span className="tag emerald ml-auto text-[10px]">{isRw ? 'BYIHARIYE' : 'PERSONALIZED'}</span>
-            </h3>
-            <p className="text-sm leading-relaxed" style={{ color: 'hsl(120 20% 85%)' }}>
-              {isRw ? selectedDevice.aiAdviceRw : selectedDevice.aiAdvice}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <span className="tag emerald">{isRw ? 'Amakuru mazima' : 'Live data'}</span>
-              <span className="tag emerald">{isRw ? 'Buri sec 10' : 'Every 10s'}</span>
-              {selectedDevice.battery < 20 && <span className="tag alert">⚠️ {isRw ? 'Bateri nke' : 'Low Battery'}</span>}
-              {isSimulation && <span className="tag sky">🔮 {isRw ? 'Igikoresho cyiyerekana' : 'Simulated'}</span>}
-            </div>
-          </div>
-
-          {/* ── DEVICE CONTROLS & PERMISSIONS ── */}
-          <div className="glass-card p-5">
+          {/* Controls */}
+          <div className="rounded-2xl p-5" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
             <h3 className="font-semibold mb-4 flex items-center gap-2">
               <Settings className="w-4 h-4" style={{ color: 'hsl(var(--emerald))' }} />
-              {isRw ? 'Igenamiterere ry\'Ikigereranyo' : 'Device Controls & Permissions'}
+              {isRw ? 'Igenamiterere' : 'Device Controls'}
             </h3>
             <div className="space-y-2.5">
-              {selectedDevice.controls.map(ctrl => {
-                const enabled = controlStates[selectedDevice.id]?.[ctrl.id] ?? ctrl.enabled;
+              {sel.controls.map(ctrl => {
+                const en = controlStates[sel.id]?.[ctrl.id] ?? ctrl.enabled;
                 return (
-                  <div key={ctrl.id} className="flex items-center justify-between p-3.5 rounded-xl transition-all"
-                    style={{ background: 'hsl(0 0% 6%)', border: `1px solid ${enabled ? 'hsl(var(--emerald) / 0.25)' : 'hsl(0 0% 12%)'}` }}>
+                  <div key={ctrl.id} className="flex items-center justify-between p-3.5 rounded-xl"
+                    style={{ background: 'hsl(var(--secondary))', border: `1px solid ${en ? 'hsl(var(--emerald) / 0.25)' : 'hsl(var(--border))'}` }}>
                     <div className="flex items-center gap-3">
-                      {enabled
-                        ? <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: 'hsl(var(--emerald))' }} />
-                        : <Shield className="w-4 h-4 flex-shrink-0 text-muted-foreground" />}
+                      {en ? <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: 'hsl(var(--emerald))' }} /> : <Shield className="w-4 h-4 flex-shrink-0 text-muted-foreground" />}
                       <div>
                         <div className="text-sm font-medium">{isRw ? ctrl.labelRw : ctrl.label}</div>
                         <p className="text-[11px] text-muted-foreground">{isRw ? ctrl.descRw : ctrl.desc}</p>
                       </div>
                     </div>
-                    <button onClick={e => { e.stopPropagation(); toggleControl(selectedDevice.id, ctrl.id); }}
+                    <button onClick={e => { e.stopPropagation(); toggleControl(sel.id, ctrl.id); }}
                       className="w-11 h-6 rounded-full flex items-center transition-all px-0.5 flex-shrink-0"
-                      style={{ background: enabled ? 'hsl(var(--emerald))' : 'hsl(0 0% 25%)', justifyContent: enabled ? 'flex-end' : 'flex-start' }}>
+                      style={{ background: en ? 'hsl(var(--emerald))' : 'hsl(0 0% 25%)', justifyContent: en ? 'flex-end' : 'flex-start' }}>
                       <div className="w-5 h-5 rounded-full shadow-sm" style={{ background: 'white' }} />
                     </button>
                   </div>
@@ -539,26 +401,50 @@ export default function IoTDevices() {
           </div>
         </div>
 
-        {/* ══ FARMING TIMELINE ══ */}
-        <div className="glass-card p-5">
+        {/* AI ADVICE SECTION — 8 rich cards */}
+        <div>
+          <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
+            <Sparkles className="w-5 h-5" style={{ color: 'hsl(var(--emerald))' }} />
+            {isRw ? 'Inama za AI — Byihariye ku Mirima Yawe' : 'AI Smart Advice — Personalized for Your Farm'}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {aiAdviceCards.map((card, i) => (
+              <div key={i} className="rounded-2xl p-5 transition-all hover:scale-[1.01]"
+                style={{ background: card.gradient, border: `1px solid ${card.border}` }}>
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: `${card.accent}20`, border: `1px solid ${card.accent}40` }}>
+                    <card.icon className="w-5 h-5" style={{ color: card.accent }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h4 className="text-sm font-semibold">{isRw ? card.titleRw : card.title}</h4>
+                      <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full"
+                        style={{ background: `${card.accent}20`, color: card.accent }}>{card.tag}</span>
+                    </div>
+                    <p className="text-xs leading-relaxed text-muted-foreground">{isRw ? card.adviceRw : card.advice}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* FARMING TIMELINE */}
+        <div className="rounded-2xl p-5" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
           <h3 className="font-semibold mb-4 flex items-center gap-2">
             <TrendingUp className="w-4 h-4" style={{ color: 'hsl(var(--emerald))' }} />
-            {isRw ? 'Inzira y\'Ubuhinzi — AI Guided' : 'AI-Guided Farming Timeline'}
+            {isRw ? 'Inzira y\'Ubuhinzi' : 'AI-Guided Farming Timeline'}
           </h3>
           <div className="flex items-center gap-1 overflow-x-auto pb-2">
             {farmingTimeline.map((step, i) => {
-              const isDone = step.status === 'done';
-              const isCurrent = step.status === 'current';
-              const stepColor = isDone ? 'hsl(var(--emerald))' : isCurrent ? 'hsl(var(--warning))' : 'hsl(0 0% 25%)';
+              const isDone = step.status === 'done'; const isCurrent = step.status === 'current';
+              const sc = isDone ? 'hsl(var(--emerald))' : isCurrent ? 'hsl(var(--warning))' : 'hsl(0 0% 25%)';
               return (
                 <div key={i} className="flex items-center">
                   <div className="flex flex-col items-center gap-1.5 min-w-[72px]">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg transition-all"
-                      style={{
-                        background: `${stepColor}20`,
-                        border: `1.5px solid ${stepColor}`,
-                        boxShadow: isCurrent ? `0 0 16px ${stepColor}40` : 'none',
-                      }}>
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
+                      style={{ background: `${sc}20`, border: `1.5px solid ${sc}`, boxShadow: isCurrent ? `0 0 16px ${sc}40` : 'none' }}>
                       {step.icon}
                     </div>
                     <span className="text-[10px] font-medium text-center" style={{ color: isDone || isCurrent ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' }}>
@@ -566,9 +452,7 @@ export default function IoTDevices() {
                     </span>
                     <span className="text-[9px] text-muted-foreground">{isRw ? `Umunsi ${step.day}` : `Day ${step.day}`}</span>
                   </div>
-                  {i < farmingTimeline.length - 1 && (
-                    <div className="w-8 h-0.5 rounded-full mx-0.5" style={{ background: isDone ? 'hsl(var(--emerald))' : 'hsl(0 0% 18%)' }} />
-                  )}
+                  {i < farmingTimeline.length - 1 && <div className="w-8 h-0.5 rounded-full mx-0.5" style={{ background: isDone ? 'hsl(var(--emerald))' : 'hsl(var(--muted))' }} />}
                 </div>
               );
             })}
@@ -578,56 +462,32 @@ export default function IoTDevices() {
         <IPWatermark />
       </div>
 
-      {/* ══ PLANT SCANNER MODAL ══ */}
+      {/* Plant Scanner Modal */}
       {showScanner && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center p-4" style={{ background: 'hsl(0 0% 0% / 0.9)', backdropFilter: 'blur(12px)' }}>
           <div className="w-full max-w-lg animate-slide-up">
-            <div className="glass-card overflow-hidden" style={{ border: '1px solid hsl(var(--emerald) / 0.3)' }}>
+            <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--emerald) / 0.3)' }}>
               <div className="flex items-center justify-between px-5 py-3" style={{ background: 'hsl(var(--emerald) / 0.1)' }}>
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Camera className="w-4 h-4" style={{ color: 'hsl(var(--emerald))' }} />
-                  🌿 {isRw ? 'Isuzuma ry\'Igihingwa' : 'Plant Health Scanner'}
-                </h3>
-                <button onClick={closeScanner} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'hsl(0 0% 12%)' }}>
-                  <X className="w-4 h-4" />
-                </button>
+                <h3 className="font-semibold flex items-center gap-2"><Camera className="w-4 h-4" style={{ color: 'hsl(var(--emerald))' }} /> 🌿 {isRw ? 'Isuzuma' : 'Plant Scanner'}</h3>
+                <button onClick={closeScanner} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'hsl(var(--secondary))' }}><X className="w-4 h-4" /></button>
               </div>
               <div className="relative bg-black aspect-video">
                 <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-                {!scanResult && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-48 h-48 border-2 rounded-2xl" style={{ borderColor: 'hsl(var(--emerald) / 0.6)', boxShadow: '0 0 30px hsl(var(--emerald) / 0.2)' }} />
-                  </div>
-                )}
-                {scanning && (
-                  <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'hsl(0 0% 0% / 0.5)' }}>
-                    <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'hsl(var(--emerald))' }} />
-                    <span className="text-sm font-medium ml-3" style={{ color: 'hsl(var(--emerald))' }}>{isRw ? 'Birimo gusuzuma...' : 'Analyzing...'}</span>
-                  </div>
-                )}
+                {!scanResult && <div className="absolute inset-0 flex items-center justify-center"><div className="w-48 h-48 border-2 rounded-2xl" style={{ borderColor: 'hsl(var(--emerald) / 0.6)' }} /></div>}
+                {scanning && <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'hsl(0 0% 0% / 0.5)' }}><Loader2 className="w-8 h-8 animate-spin" style={{ color: 'hsl(var(--emerald))' }} /></div>}
               </div>
               {scanResult ? (
                 <div className="p-5 space-y-4">
                   <div className="flex items-center gap-3 p-4 rounded-xl" style={{ background: scanResult.color + '15', border: `1px solid ${scanResult.color}30` }}>
                     <span className="text-3xl">{scanResult.icon}</span>
-                    <div>
-                      <h4 className="font-semibold" style={{ color: scanResult.color }}>{scanResult.status}</h4>
-                      <p className="text-xs text-muted-foreground mt-1">{isRw ? scanResult.adviceRw : scanResult.advice}</p>
-                    </div>
-                  </div>
-                  <div className="p-3 rounded-lg text-xs" style={{ background: 'hsl(var(--sky) / 0.08)', border: '1px solid hsl(var(--sky) / 0.2)', color: 'hsl(var(--sky))' }}>
-                    ℹ️ {isRw ? 'Ibi ni inama rusange. Baza umujyanama.' : 'General recommendations only. Consult an agricultural advisor for treatment.'}
+                    <div><h4 className="font-semibold" style={{ color: scanResult.color }}>{scanResult.status}</h4><p className="text-xs text-muted-foreground mt-1">{isRw ? scanResult.adviceRw : scanResult.advice}</p></div>
                   </div>
                   <button onClick={closeScanner} className="btn-emerald w-full">{isRw ? 'Funga' : 'Close'}</button>
                 </div>
               ) : (
                 <div className="p-5">
-                  <p className="text-xs text-muted-foreground mb-4 text-center">
-                    {isRw ? 'Erekana igihingwa maze ukande "Suzuma"' : 'Point your camera at the plant and tap "Scan"'}
-                  </p>
-                  <button onClick={handleScan} disabled={scanning} className="btn-emerald w-full flex items-center justify-center gap-2">
-                    <Eye className="w-4 h-4" /> {isRw ? 'Suzuma' : 'Scan Plant'}
-                  </button>
+                  <p className="text-xs text-muted-foreground mb-4 text-center">{isRw ? 'Erekana igihingwa maze ukande "Suzuma"' : 'Point camera at plant and tap "Scan"'}</p>
+                  <button onClick={handleScan} disabled={scanning} className="btn-emerald w-full flex items-center justify-center gap-2"><Eye className="w-4 h-4" /> {isRw ? 'Suzuma' : 'Scan'}</button>
                 </div>
               )}
             </div>

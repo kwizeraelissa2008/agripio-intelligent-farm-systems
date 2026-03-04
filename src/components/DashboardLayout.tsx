@@ -185,11 +185,21 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       )}
 
       {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0"
+        style={{
+          backgroundImage: `
+            radial-gradient(ellipse 80% 60% at 50% 0%, hsl(145 60% 8% / 0.4), transparent 60%),
+            radial-gradient(ellipse 60% 40% at 80% 100%, hsl(200 40% 8% / 0.25), transparent 50%),
+            linear-gradient(180deg, hsl(0 0% 4%) 0%, hsl(145 10% 4%) 50%, hsl(0 0% 4%) 100%)
+          `,
+          backgroundAttachment: 'fixed',
+        }}>
+        {/* Subtle grid pattern overlay */}
+        <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.03]"
+          style={{ backgroundImage: 'linear-gradient(hsl(var(--emerald)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--emerald)) 1px, transparent 1px)', backgroundSize: '50px 50px' }} />
         {/* Top bar */}
         <header className="sticky top-0 z-40 flex items-center justify-between px-4 md:px-6 h-14"
-          style={{ background: 'hsl(var(--sidebar-background) / 0.9)', backdropFilter: 'blur(20px)', borderBottom: '1px solid hsl(var(--border))' }}>
-          
+          style={{ background: 'hsl(var(--sidebar-background) / 0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid hsl(var(--border))' }}>
           {isMobile && (
             <div className="flex items-center gap-3">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'var(--gradient-emerald)' }}>
