@@ -1,11 +1,27 @@
-import { useState } from 'react';
+/**
+ * AgriGuide — Interactive AI Farming Mentor Chat
+ * Conversational AI that guides farmers from idea to harvest plan
+ * © 2026 AgriPio — All rights reserved.
+ */
+import { useState, useRef, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useApp } from '@/contexts/AppContext';
-import { Leaf, ChevronRight, ChevronLeft, Loader2, Target, Calendar, Droplets, AlertTriangle, TrendingUp, CheckCircle } from 'lucide-react';
+import { 
+  Send, Leaf, Sparkles, Download, RotateCcw, 
+  Target, Calendar, Droplets, AlertTriangle, TrendingUp, CheckCircle,
+  MessageCircle, Bot, User, Lightbulb, Shield
+} from 'lucide-react';
+import confetti from 'canvas-confetti';
 
-type WizardStep = 'soil' | 'location' | 'budget' | 'result';
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  type?: 'text' | 'plan' | 'tip' | 'ip-alert';
+}
 
-interface ProjectPlan {
+interface FarmPlan {
   crop: string;
   plantingDate: string;
   irrigationSchedule: string;
@@ -15,265 +31,249 @@ interface ProjectPlan {
   estimatedRevenue: string;
   profitabilityScore: number;
   marketStrategy: string;
+  ipTip: string;
 }
 
-const cropOptions = ['Maize', 'Tomatoes', 'Beans', 'Avocado', 'Sweet Potato', 'Cassava', 'Coffee', 'Tea'];
+const quickPrompts = [
+  { emoji: '🌽', label: 'Best crop for my soil', prompt: 'What is the best crop to plant for soil with pH 6.2 and moderate nitrogen in Kigali region?' },
+  { emoji: '💧', label: 'Irrigation help', prompt: 'How should I set up an irrigation schedule for 2 hectares of maize during dry season?' },
+  { emoji: '💰', label: 'Market prices', prompt: 'What are the current best-selling crops in Rwanda and their market prices?' },
+  { emoji: '🛡️', label: 'Protect my idea', prompt: 'I invented a new composting method. How can I protect it as intellectual property?' },
+  { emoji: '🌱', label: 'Full farm plan', prompt: 'Help me create a complete farming plan for 3 hectares in Musanze with budget of RWF 800,000' },
+  { emoji: '🐛', label: 'Pest prevention', prompt: 'What organic pest prevention methods work best for tomatoes in Rwanda?' },
+];
+
+const aiResponses: Record<string, { content: string; type?: ChatMessage['type'] }> = {
+  'crop': {
+    content: `🌱 Great question, Farmer! Based on **pH 6.2** and **moderate nitrogen** in Kigali:\n\n**Top 3 Recommendations:**\n1. 🌽 **Maize** — 89% soil compatibility, high market demand (+18% price trend)\n2. 🫘 **Beans** — Excellent nitrogen fixation, great rotation crop\n3. 🥑 **Avocado (long-term)** — Premium export prices, Hass variety thriving at your altitude\n\n**Pro Tip:** Maize + Beans intercropping increases yield by 25%! 📈\n\n💡 **IP Insight:** If you develop a unique intercropping pattern, document it — that's a potential trade secret! 🛡️\n\nWant me to create a full plan for any of these? Just say which! 😊`
+  },
+  'irrigation': {
+    content: `💧 Here's your **Smart Irrigation Schedule** for 2ha of maize:\n\n**Phase 1 — Germination (Week 1-2):**\n• Water every 2 days, 20mm per session\n• Morning irrigation (6-8 AM) to reduce evaporation\n\n**Phase 2 — Vegetative (Week 3-8):**\n• Water every 3 days, 25mm per session\n• Monitor soil moisture — target 60-70%\n\n**Phase 3 — Tasseling (Week 9-12):**\n• Critical! Water every 2 days, 30mm\n• This phase determines yield size 🎯\n\n**Phase 4 — Maturation (Week 13+):**\n• Reduce to every 5 days\n• Stop 2 weeks before harvest\n\n**Estimated Water:** ~450,000 liters total\n**Cost Saving Tip:** Drip irrigation saves 40% water vs flood! 💡\n\nShall I help you design a low-cost drip system? That could be patentable! 🚀`
+  },
+  'market': {
+    content: `📊 **Rwanda Market Intelligence — Live Update:**\n\n| Crop | Price | Trend | Demand |\n|------|-------|-------|--------|\n| 🌽 Maize | RWF 350/kg | ↑ +18% | 🔥 High |\n| 🍅 Tomatoes | RWF 900/kg | ↑ +5% | 🔥 Very High |\n| 🥑 Avocado | RWF 450/kg | ↑ +12% | 📈 Growing |\n| 🫘 Beans | RWF 1,100/kg | ↓ -3% | ➡️ Medium |\n| 🥔 Potatoes | RWF 180/kg | ↑ +2% | 📈 High |\n\n**Best Opportunity:** Tomatoes — restaurants in Kigali paying premium prices for consistent organic supply! 🏪\n\n**Pro Move:** Brand your produce (e.g., "Musanze Fresh Tomatoes" ™) — branded products sell 30% higher! 🛡️\n\nWant me to help you create a marketplace listing? 🛒`
+  },
+  'protect': {
+    content: `🛡️ **Excellent thinking, Innovator!** Protecting your composting method is smart! Here's how:\n\n**Option 1 — Trade Secret (FREE, Immediate)**\n✅ Keep the formula confidential\n✅ Document everything with dates\n✅ Share only under NDA agreements\n⚠️ Lost if someone discovers it independently\n\n**Option 2 — Patent (Strongest, 20 years)**\n✅ Exclusive rights to your method\n✅ Can license it to others for income\n💰 Cost: ~$500-2000 via Rwanda Development Board (RDB)\n📋 Requirements: Must be novel, non-obvious, useful\n\n**My Recommendation:** Start with Trade Secret (free!), then file a patent when you have budget. Document EVERYTHING:\n• 📝 Write the exact process with dates\n• 📸 Take photos/videos of results\n• 🧪 Record test data\n\n**ARIPO Registration** can protect across 22 African countries! 🌍\n\nWant me to help draft your invention disclosure document? 📄`,
+    type: 'ip-alert'
+  },
+  'plan': {
+    content: `🎯 **Your Complete Farm Plan — Musanze, 3ha, RWF 800,000**\n\nI've analyzed soil data, weather patterns, market demand, and your budget. Here's your optimized plan:\n\n---\n\n📋 **CROP:** Maize (Main) + Beans (Intercrop)\n📅 **PLANTING:** March 5, 2026 (Optimal window — 2 weeks ahead)\n💧 **IRRIGATION:** Every 3 days, 25mm/session — drip recommended\n🧪 **FERTILIZER:** Week 1: 40kg/ha DAP → Week 4: 30kg/ha Urea → Week 8: 20kg/ha KSO4\n⚠️ **PEST RISK:** Moderate — Late blight (35%), Stem borer (20%)\n📊 **EXPECTED YIELD:** 12,600 kg (4.2 tons/ha)\n💰 **REVENUE:** RWF 4,410,000\n📈 **PROFIT SCORE:** 82/100\n🏪 **STRATEGY:** Sell 60% bulk in June, hold 40% for August premium\n\n---\n\n🛡️ **IP Protection Tips:**\n• Your unique intercropping ratio? **Trade secret!**\n• Brand as "Musanze Premium Maize" ™\n• Document your yields — builds investment portfolio\n\n🎉 **You're innovating like a pro!** Want me to track this plan day-by-day? I'll remind you when actions are due! 🚀`,
+    type: 'plan'
+  },
+  'pest': {
+    content: `🐛 **Organic Pest Prevention for Tomatoes in Rwanda:**\n\n**Top 5 Methods (Chemical-Free!):**\n\n1. 🌿 **Neem Oil Spray** — Mix 5ml neem oil + 1L water + drop of soap\n   • Apply every 7 days\n   • Effective against: aphids, whiteflies, mites\n\n2. 🧄 **Garlic-Chili Spray** — Blend 10 garlic cloves + 5 chili peppers + 2L water\n   • Strain and spray every 5 days\n   • Natural insect repellent\n\n3. 🌻 **Companion Planting** — Plant marigolds around tomatoes\n   • Repels nematodes and some insects\n   • Beautiful AND functional! 🌼\n\n4. 🪤 **Yellow Sticky Traps** — Hang at plant height\n   • Catches whiteflies and thrips\n   • Check and replace weekly\n\n5. 🐞 **Beneficial Insects** — Encourage ladybugs\n   • They eat 50+ aphids per day!\n   • Plant dill or fennel nearby to attract them\n\n**Prevention Calendar:**\n• Week 1-2: Apply neem oil preventively\n• Week 3+: Monitor daily, spray garlic mix if pests spotted\n• Monthly: Rotate methods to prevent resistance\n\n💡 **IP Tip:** If you develop an effective organic formula, that's a potential patentable innovation! Document your recipe! 🛡️`
+  },
+  'default': {
+    content: `👋 Hello, Farmer! I'm **AgriGuide**, your AI farming mentor! 🌱\n\nI'm here to help you:\n• 🌾 Plan your farming season\n• 💧 Optimize irrigation & soil health\n• 📊 Find the best market prices\n• 🛡️ Protect your agricultural innovations (IP)\n• 🐛 Prevent pests organically\n• 💰 Maximize your farm profits\n\nTell me about your farm — what's your dream crop? What challenges are you facing? I'll create a personalized plan just for you! 😊\n\n**Try asking me:**\n• "What should I plant this season?"\n• "Create a farming plan for 2 hectares"\n• "How do I protect my farming innovation?"\n\nLet's grow something amazing together! 🚀`
+  }
+};
+
+function getAIResponse(input: string): { content: string; type?: ChatMessage['type'] } {
+  const lower = input.toLowerCase();
+  if (lower.includes('crop') || lower.includes('plant') || lower.includes('soil') || lower.includes('best')) return aiResponses.crop;
+  if (lower.includes('irrigation') || lower.includes('water') || lower.includes('drip')) return aiResponses.irrigation;
+  if (lower.includes('market') || lower.includes('price') || lower.includes('sell')) return aiResponses.market;
+  if (lower.includes('protect') || lower.includes('patent') || lower.includes('ip') || lower.includes('intellectual') || lower.includes('idea') || lower.includes('invent')) return aiResponses.protect;
+  if (lower.includes('plan') || lower.includes('hectare') || lower.includes('budget') || lower.includes('full') || lower.includes('complete')) return aiResponses.plan;
+  if (lower.includes('pest') || lower.includes('disease') || lower.includes('organic') || lower.includes('bug') || lower.includes('insect')) return aiResponses.pest;
+  return aiResponses.default;
+}
 
 export default function AIGuidance() {
-  const { t } = useApp();
-  const [step, setStep] = useState<WizardStep>('soil');
-  const [loading, setLoading] = useState(false);
-  const [plan, setPlan] = useState<ProjectPlan | null>(null);
-  
-  const [form, setForm] = useState({
-    soilPH: '6.2', nitrogen: '45', phosphorus: '32', potassium: '180', moisture: '68',
-    region: 'Kigali', cropPreference: 'Maize', farmSize: '2.5',
-    budget: '500000', timeline: '6',
-  });
+  const { t, language, user } = useApp();
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: '0',
+      role: 'assistant',
+      content: `👋 Hello${user?.name ? `, ${user.name.split(' ')[0]}` : ''}! I'm **AgriGuide**, your AI farming mentor! 🌱\n\nTell me about your farm — what's your dream crop? What challenges do you face? I'll create a personalized plan! 😊\n\nOr tap a quick prompt below to get started! 🚀`,
+      timestamp: new Date(),
+      type: 'text',
+    }
+  ]);
+  const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const generatePlan = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setPlan({
-        crop: form.cropPreference || 'Maize',
-        plantingDate: 'February 28, 2024 (Optimal Window)',
-        irrigationSchedule: 'Every 3 days — 25mm per irrigation. Reduce to 5 days after germination.',
-        fertilizerPlan: 'Week 1: 40kg/ha DAP. Week 4: 30kg/ha Urea. Week 8: 20kg/ha Potassium Sulfate.',
-        pestRisk: 'Moderate — Late blight (35% risk), Stem borer (20% risk). Monitor weekly.',
-        expectedYield: `${Math.round(parseFloat(form.farmSize) * 4200)} kg (4.2 tons/ha)`,
-        estimatedRevenue: `RWF ${(parseFloat(form.farmSize) * 4200 * 350).toLocaleString()}`,
-        profitabilityScore: 78,
-        marketStrategy: 'Sell 60% to Kigali bulk buyers in June. Hold 40% for August premium pricing window.',
-      });
-      setStep('result');
-      setLoading(false);
-    }, 2500);
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const InputField = ({ label, id, value, onChange, type = 'text', suffix = '', min = '' }: any) => (
-    <div>
-      <label className="text-xs text-muted-foreground mb-1.5 block">{label}</label>
-      <div className="flex items-center">
-        <input type={type} value={value} onChange={onChange} min={min}
-          className="flex-1 px-4 py-3 rounded-xl text-sm outline-none"
-          style={{ background: 'hsl(0 0% 10%)', border: '1px solid hsl(0 0% 15%)', color: 'hsl(120 20% 96%)' }} />
-        {suffix && <span className="ml-2 text-xs text-muted-foreground">{suffix}</span>}
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const sendMessage = (text: string) => {
+    if (!text.trim()) return;
+
+    const userMsg: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: text,
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, userMsg]);
+    setInput('');
+    setIsTyping(true);
+
+    // Simulate AI thinking
+    setTimeout(() => {
+      const response = getAIResponse(text);
+      const aiMsg: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: response.content,
+        timestamp: new Date(),
+        type: response.type || 'text',
+      };
+      setMessages(prev => [...prev, aiMsg]);
+      setIsTyping(false);
+
+      // Confetti for plan generation
+      if (response.type === 'plan') {
+        confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 }, colors: ['#00c853', '#69f0ae', '#ffd700'] });
+      }
+    }, 1500 + Math.random() * 1000);
+  };
+
+  const resetChat = () => {
+    setMessages([{
+      id: '0',
+      role: 'assistant',
+      content: `👋 Fresh start! Tell me about your farm — I'm ready to help! 🌱`,
+      timestamp: new Date(),
+    }]);
+  };
+
+  const renderMessage = (msg: ChatMessage) => {
+    const isUser = msg.role === 'user';
+    return (
+      <div key={msg.id} className={`flex gap-3 ${isUser ? 'flex-row-reverse' : ''} animate-fade-in`}>
+        <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center"
+          style={isUser 
+            ? { background: 'hsl(var(--emerald) / 0.2)', color: 'hsl(var(--emerald))' }
+            : { background: 'var(--gradient-emerald)', color: 'hsl(var(--primary-foreground))' }}>
+          {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+        </div>
+        <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${isUser ? 'rounded-tr-md' : 'rounded-tl-md'}`}
+          style={isUser
+            ? { background: 'hsl(var(--emerald) / 0.15)', border: '1px solid hsl(var(--emerald) / 0.25)' }
+            : msg.type === 'ip-alert'
+            ? { background: 'hsl(var(--gold) / 0.08)', border: '1px solid hsl(var(--gold) / 0.25)' }
+            : msg.type === 'plan'
+            ? { background: 'hsl(var(--emerald) / 0.06)', border: '1px solid hsl(var(--emerald) / 0.2)' }
+            : { background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+          {msg.type === 'ip-alert' && (
+            <div className="flex items-center gap-1.5 mb-2 text-xs font-semibold" style={{ color: 'hsl(var(--gold))' }}>
+              <Shield className="w-3.5 h-3.5" /> IP Protection Advice
+            </div>
+          )}
+          {msg.type === 'plan' && (
+            <div className="flex items-center gap-1.5 mb-2 text-xs font-semibold" style={{ color: 'hsl(var(--emerald))' }}>
+              <Target className="w-3.5 h-3.5" /> AI Farm Plan Generated 🎉
+            </div>
+          )}
+          <div className="whitespace-pre-wrap">
+            {msg.content.split('\n').map((line, i) => {
+              if (line.startsWith('**') && line.endsWith('**')) {
+                return <div key={i} className="font-bold my-1">{line.replace(/\*\*/g, '')}</div>;
+              }
+              const boldProcessed = line.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+              return <div key={i} dangerouslySetInnerHTML={{ __html: boldProcessed }} />;
+            })}
+          </div>
+          <div className="text-xs text-muted-foreground mt-2">
+            {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </div>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <DashboardLayout>
-      <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
-        <div>
-          <h1 className="text-2xl font-bold">AI Project Guidance</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">AI-powered farm planning from soil to harvest</p>
-        </div>
-
-        {/* Progress */}
-        <div className="flex items-center gap-2">
-          {(['soil', 'location', 'budget', 'result'] as WizardStep[]).map((s, i) => (
-            <div key={s} className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all"
-                style={step === s ? { background: 'hsl(145 100% 39%)', color: 'hsl(0 0% 4%)' } 
-                  : i < (['soil', 'location', 'budget', 'result'] as WizardStep[]).indexOf(step) 
-                  ? { background: 'hsl(145 100% 39% / 0.3)', color: 'hsl(145 100% 39%)' }
-                  : { background: 'hsl(0 0% 12%)', color: 'hsl(120 10% 55%)' }}>
-                {i + 1}
-              </div>
-              {i < 3 && <div className="flex-1 h-0.5 w-8" style={{ background: i < (['soil', 'location', 'budget', 'result'] as WizardStep[]).indexOf(step) ? 'hsl(145 100% 39%)' : 'hsl(0 0% 15%)' }} />}
+      <div className="max-w-3xl mx-auto h-[calc(100vh-8rem)] flex flex-col animate-fade-in">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--gradient-emerald)' }}>
+              <Sparkles className="w-5 h-5" style={{ color: 'hsl(var(--primary-foreground))' }} />
             </div>
-          ))}
-          <div className="ml-2 text-xs text-muted-foreground capitalize">{step === 'result' ? 'AI Plan Generated' : `Step: ${step}`}</div>
+            <div>
+              <h1 className="text-xl font-bold flex items-center gap-2">
+                Chat with AgriGuide 🌟
+              </h1>
+              <p className="text-xs text-muted-foreground">Your AI farming mentor — ask anything! 🌱</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={resetChat} className="p-2 rounded-lg transition-all hover:bg-secondary" title="New chat">
+              <RotateCcw className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </div>
         </div>
 
-        <div className="glass-card p-6">
+        {/* Chat Messages */}
+        <div className="flex-1 overflow-y-auto space-y-4 pb-4 pr-1">
+          {messages.map(renderMessage)}
           
-          {/* Step 1: Soil */}
-          {step === 'soil' && !loading && (
-            <div className="space-y-5 animate-fade-in">
-              <div>
-                <h2 className="text-xl font-semibold mb-1">🌱 Soil Data</h2>
-                <p className="text-sm text-muted-foreground">Enter your soil analysis values or sync from IoT device</p>
+          {isTyping && (
+            <div className="flex gap-3 animate-fade-in">
+              <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center"
+                style={{ background: 'var(--gradient-emerald)', color: 'hsl(var(--primary-foreground))' }}>
+                <Bot className="w-4 h-4" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <InputField label="Soil pH" id="ph" value={form.soilPH} type="number" onChange={(e: any) => setForm(p => ({ ...p, soilPH: e.target.value }))} />
-                <InputField label="Nitrogen (mg/kg)" value={form.nitrogen} type="number" onChange={(e: any) => setForm(p => ({ ...p, nitrogen: e.target.value }))} />
-                <InputField label="Phosphorus (mg/kg)" value={form.phosphorus} type="number" onChange={(e: any) => setForm(p => ({ ...p, phosphorus: e.target.value }))} />
-                <InputField label="Potassium (mg/kg)" value={form.potassium} type="number" onChange={(e: any) => setForm(p => ({ ...p, potassium: e.target.value }))} />
-                <InputField label="Moisture (%)" value={form.moisture} type="number" onChange={(e: any) => setForm(p => ({ ...p, moisture: e.target.value }))} />
-              </div>
-              <div className="p-3 rounded-xl flex items-center gap-3" style={{ background: 'hsl(145 100% 39% / 0.08)', border: '1px solid hsl(145 100% 39% / 0.2)' }}>
-                <span className="text-xl">🤖</span>
-                <span className="text-sm">IoT device detected — click to auto-fill from live sensor data</span>
-                <button className="tag emerald ml-auto cursor-pointer">Sync Now</button>
-              </div>
-              <div className="flex justify-end">
-                <button className="btn-emerald flex items-center gap-2" onClick={() => setStep('location')}>
-                  Next: Location <ChevronRight className="w-4 h-4" />
-                </button>
+              <div className="rounded-2xl rounded-tl-md px-4 py-3" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                <div className="flex gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0s' }} />
+                  <div className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0.15s' }} />
+                  <div className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0.3s' }} />
+                </div>
               </div>
             </div>
           )}
-
-          {/* Step 2: Location */}
-          {step === 'location' && !loading && (
-            <div className="space-y-5 animate-fade-in">
-              <div>
-                <h2 className="text-xl font-semibold mb-1">📍 Farm & Crop Details</h2>
-                <p className="text-sm text-muted-foreground">Location, farm size, and crop preference</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1.5 block">Region</label>
-                  <select value={form.region} onChange={e => setForm(p => ({ ...p, region: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl text-sm outline-none"
-                    style={{ background: 'hsl(0 0% 10%)', border: '1px solid hsl(0 0% 15%)', color: 'hsl(120 20% 96%)' }}>
-                    {['Kigali', 'Northern Province', 'Southern Province', 'Eastern Province', 'Western Province'].map(r => (
-                      <option key={r} value={r}>{r}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1.5 block">Preferred Crop</label>
-                  <select value={form.cropPreference} onChange={e => setForm(p => ({ ...p, cropPreference: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl text-sm outline-none"
-                    style={{ background: 'hsl(0 0% 10%)', border: '1px solid hsl(0 0% 15%)', color: 'hsl(120 20% 96%)' }}>
-                    {cropOptions.map(c => <option key={c}>{c}</option>)}
-                  </select>
-                </div>
-                <InputField label="Farm Size (hectares)" value={form.farmSize} type="number" onChange={(e: any) => setForm(p => ({ ...p, farmSize: e.target.value }))} />
-                <InputField label="Growing Timeline (months)" value={form.timeline} type="number" onChange={(e: any) => setForm(p => ({ ...p, timeline: e.target.value }))} />
-              </div>
-              <div className="flex gap-3 justify-between">
-                <button className="btn-emerald-outline flex items-center gap-2" onClick={() => setStep('soil')}>
-                  <ChevronLeft className="w-4 h-4" /> Back
-                </button>
-                <button className="btn-emerald flex items-center gap-2" onClick={() => setStep('budget')}>
-                  Next: Budget <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Budget */}
-          {step === 'budget' && !loading && (
-            <div className="space-y-5 animate-fade-in">
-              <div>
-                <h2 className="text-xl font-semibold mb-1">💰 Budget & Goals</h2>
-                <p className="text-sm text-muted-foreground">Help AI optimize your profit strategy</p>
-              </div>
-              <InputField label="Total Budget (RWF)" value={form.budget} type="number" onChange={(e: any) => setForm(p => ({ ...p, budget: e.target.value }))} />
-              <div className="p-4 rounded-xl space-y-2" style={{ background: 'hsl(0 0% 8%)', border: '1px solid hsl(0 0% 13%)' }}>
-                <h3 className="text-sm font-medium mb-3">AI Analysis Summary</h3>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Soil Health</span>
-                  <span style={{ color: 'hsl(145 100% 39%)' }}>74% — Good</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Crop Match</span>
-                  <span style={{ color: 'hsl(145 100% 39%)' }}>{form.cropPreference} — 89% compatible</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Season Timing</span>
-                  <span style={{ color: 'hsl(43 96% 56%)' }}>Optimal — 2 weeks ahead</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Market Demand</span>
-                  <span style={{ color: 'hsl(145 100% 39%)' }}>High — +18% price trend</span>
-                </div>
-              </div>
-              <div className="flex gap-3 justify-between">
-                <button className="btn-emerald-outline flex items-center gap-2" onClick={() => setStep('location')}>
-                  <ChevronLeft className="w-4 h-4" /> Back
-                </button>
-                <button className="btn-emerald flex items-center gap-2" onClick={generatePlan}>
-                  🤖 Generate AI Plan <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Loading */}
-          {loading && (
-            <div className="flex flex-col items-center justify-center py-16 gap-4 animate-fade-in">
-              <div className="relative">
-                <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: 'hsl(145 100% 39% / 0.1)' }}>
-                  <Leaf className="w-10 h-10 animate-pulse" style={{ color: 'hsl(145 100% 39%)' }} />
-                </div>
-                <div className="absolute inset-0 rounded-full animate-ping" style={{ background: 'hsl(145 100% 39% / 0.1)' }} />
-              </div>
-              <div className="text-center">
-                <h3 className="font-semibold mb-1">AI Analyzing Your Farm...</h3>
-                <p className="text-sm text-muted-foreground">Processing soil, weather, market data & generating optimal plan</p>
-              </div>
-              <div className="space-y-2 text-xs text-muted-foreground text-center">
-                {['Analyzing soil composition...', 'Checking weather patterns...', 'Querying market intelligence...', 'Calculating yield prediction...'].map((msg, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <Loader2 className="w-3 h-3 animate-spin" style={{ color: 'hsl(145 100% 39%)' }} />
-                    <span>{msg}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Result */}
-          {step === 'result' && plan && !loading && (
-            <div className="space-y-5 animate-fade-in">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold">🎯 AI Farming Plan</h2>
-                  <p className="text-sm text-muted-foreground">{plan.crop} • {form.farmSize} ha • {form.region}</p>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold" style={{ color: 'hsl(145 100% 39%)' }}>{plan.profitabilityScore}</div>
-                  <div className="text-xs text-muted-foreground">Profit Score</div>
-                </div>
-              </div>
-
-              <div className="score-meter mb-4">
-                <div className="score-meter-fill" style={{ width: `${plan.profitabilityScore}%` }} />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  { icon: Calendar, label: 'Planting Date', value: plan.plantingDate, color: 'hsl(145 100% 39%)' },
-                  { icon: Droplets, label: 'Irrigation', value: plan.irrigationSchedule, color: 'hsl(200 90% 50%)' },
-                  { icon: Leaf, label: 'Fertilizer Plan', value: plan.fertilizerPlan, color: 'hsl(43 96% 56%)' },
-                  { icon: AlertTriangle, label: 'Pest Risk', value: plan.pestRisk, color: 'hsl(45 100% 51%)' },
-                  { icon: Target, label: 'Expected Yield', value: plan.expectedYield, color: 'hsl(145 100% 39%)' },
-                  { icon: TrendingUp, label: 'Est. Revenue', value: plan.estimatedRevenue, color: 'hsl(43 96% 56%)' },
-                ].map(item => (
-                  <div key={item.label} className="p-4 rounded-xl" style={{ background: 'hsl(0 0% 8%)', border: '1px solid hsl(0 0% 13%)' }}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <item.icon className="w-4 h-4" style={{ color: item.color }} />
-                      <span className="text-xs text-muted-foreground">{item.label}</span>
-                    </div>
-                    <p className="text-sm leading-snug">{item.value}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="p-4 rounded-xl" style={{ background: 'hsl(145 100% 39% / 0.08)', border: '1px solid hsl(145 100% 39% / 0.2)' }}>
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="w-4 h-4" style={{ color: 'hsl(145 100% 39%)' }} />
-                  <span className="text-sm font-medium">Market Strategy</span>
-                </div>
-                <p className="text-sm text-muted-foreground">{plan.marketStrategy}</p>
-              </div>
-
-              <div className="flex gap-3">
-                <button className="btn-emerald flex-1 flex items-center justify-center gap-2">
-                  <CheckCircle className="w-4 h-4" /> Save Project
-                </button>
-                <button className="btn-emerald-outline px-4" onClick={() => { setStep('soil'); setPlan(null); }}>
-                  New Plan
-                </button>
-              </div>
-            </div>
-          )}
+          <div ref={messagesEndRef} />
         </div>
+
+        {/* Quick Prompts */}
+        {messages.length <= 1 && (
+          <div className="mb-3">
+            <p className="text-xs text-muted-foreground mb-2">✨ Quick start:</p>
+            <div className="flex flex-wrap gap-2">
+              {quickPrompts.map(qp => (
+                <button key={qp.label} onClick={() => sendMessage(qp.prompt)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all hover:scale-105"
+                  style={{ background: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))' }}>
+                  <span>{qp.emoji}</span> {qp.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Input */}
+        <div className="flex gap-2 items-end">
+          <div className="flex-1 relative">
+            <input ref={inputRef} value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage(input)}
+              placeholder={language === 'en' ? "Ask AgriGuide anything... 🌱" : "Baza AgriGuide ikintu icyo ari cyo cyose... 🌱"}
+              className="w-full px-4 py-3.5 pr-12 rounded-2xl text-sm outline-none"
+              style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }}
+              disabled={isTyping}
+            />
+            <button onClick={() => sendMessage(input)} disabled={!input.trim() || isTyping}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl flex items-center justify-center transition-all disabled:opacity-30"
+              style={{ background: 'var(--gradient-emerald)', color: 'hsl(var(--primary-foreground))' }}>
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <p className="text-center text-[10px] text-muted-foreground mt-2">
+          🛡️ AgriGuide prioritizes IP protection in all advice • © 2026 AgriPio
+        </p>
       </div>
     </DashboardLayout>
   );

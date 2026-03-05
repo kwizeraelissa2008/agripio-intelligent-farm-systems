@@ -3,24 +3,23 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
 import {
   Leaf, LayoutDashboard, ShoppingBag, Cpu, Camera, BarChart3,
-  TrendingUp, Bell, Settings, Menu, X, ChevronRight,
-  Mic, Globe, LogOut, User, Newspaper, Plus
+  TrendingUp, Bell, Settings, ChevronRight,
+  Mic, Globe, LogOut, Sun, Moon, Newspaper, Sparkles, BookOpen
 } from 'lucide-react';
 import VoiceAssistant from './VoiceAssistant';
 import NotificationPanel from './NotificationPanel';
 import IPLessonModal from './IPLessonModal';
 
-// Role-specific nav items
 const getNavItems = (role: string) => {
   const common = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'dashboard' },
   ];
-
   switch (role) {
     case 'farmer':
       return [
         ...common,
-        { path: '/dashboard/ai-guidance', icon: Leaf, label: 'myProjects' },
+        { path: '/dashboard/ai-guidance', icon: Sparkles, label: 'AgriGuide' },
+        { path: '/dashboard/ip-learning', icon: BookOpen, label: 'Learn IP' },
         { path: '/dashboard/marketplace', icon: ShoppingBag, label: 'marketplace' },
         { path: '/dashboard/devices', icon: Cpu, label: 'devices' },
         { path: '/dashboard/capture', icon: Camera, label: 'capture' },
@@ -29,51 +28,23 @@ const getNavItems = (role: string) => {
         { path: '/dashboard/news', icon: Newspaper, label: 'news' },
       ];
     case 'buyer':
-      return [
-        ...common,
-        { path: '/dashboard/marketplace', icon: ShoppingBag, label: 'marketplace' },
-        { path: '/dashboard/market-intel', icon: TrendingUp, label: 'marketIntel' },
-        { path: '/dashboard/news', icon: Newspaper, label: 'news' },
-      ];
+      return [...common, { path: '/dashboard/marketplace', icon: ShoppingBag, label: 'marketplace' }, { path: '/dashboard/market-intel', icon: TrendingUp, label: 'marketIntel' }, { path: '/dashboard/news', icon: Newspaper, label: 'news' }];
     case 'investor':
-      return [
-        ...common,
-        { path: '/dashboard/market-intel', icon: TrendingUp, label: 'marketIntel' },
-        { path: '/dashboard/analytics', icon: BarChart3, label: 'analytics' },
-        { path: '/dashboard/news', icon: Newspaper, label: 'news' },
-      ];
+      return [...common, { path: '/dashboard/market-intel', icon: TrendingUp, label: 'marketIntel' }, { path: '/dashboard/analytics', icon: BarChart3, label: 'analytics' }, { path: '/dashboard/news', icon: Newspaper, label: 'news' }];
     case 'supplier':
-      return [
-        ...common,
-        { path: '/dashboard/marketplace', icon: ShoppingBag, label: 'marketplace' },
-        { path: '/dashboard/market-intel', icon: TrendingUp, label: 'marketIntel' },
-        { path: '/dashboard/news', icon: Newspaper, label: 'news' },
-      ];
+      return [...common, { path: '/dashboard/marketplace', icon: ShoppingBag, label: 'marketplace' }, { path: '/dashboard/market-intel', icon: TrendingUp, label: 'marketIntel' }, { path: '/dashboard/news', icon: Newspaper, label: 'news' }];
     case 'cooperative':
-      return [
-        ...common,
-        { path: '/dashboard/marketplace', icon: ShoppingBag, label: 'marketplace' },
-        { path: '/dashboard/analytics', icon: BarChart3, label: 'analytics' },
-        { path: '/dashboard/news', icon: Newspaper, label: 'news' },
-      ];
+      return [...common, { path: '/dashboard/marketplace', icon: ShoppingBag, label: 'marketplace' }, { path: '/dashboard/analytics', icon: BarChart3, label: 'analytics' }, { path: '/dashboard/news', icon: Newspaper, label: 'news' }];
     case 'admin':
-      return [
-        ...common,
-        { path: '/dashboard/marketplace', icon: ShoppingBag, label: 'marketplace' },
-        { path: '/dashboard/devices', icon: Cpu, label: 'devices' },
-        { path: '/dashboard/market-intel', icon: TrendingUp, label: 'marketIntel' },
-        { path: '/dashboard/analytics', icon: BarChart3, label: 'analytics' },
-        { path: '/dashboard/news', icon: Newspaper, label: 'news' },
-      ];
+      return [...common, { path: '/dashboard/marketplace', icon: ShoppingBag, label: 'marketplace' }, { path: '/dashboard/devices', icon: Cpu, label: 'devices' }, { path: '/dashboard/market-intel', icon: TrendingUp, label: 'marketIntel' }, { path: '/dashboard/analytics', icon: BarChart3, label: 'analytics' }, { path: '/dashboard/news', icon: Newspaper, label: 'news' }];
     default:
       return common;
   }
 };
 
-// Role-specific FAB config
 const getFabConfig = (role: string) => {
   switch (role) {
-    case 'farmer': return { label: '🌱 Start AI Project', path: '/dashboard/ai-guidance' };
+    case 'farmer': return { label: '🌟 Chat with AgriGuide', path: '/dashboard/ai-guidance' };
     case 'buyer': return { label: '📋 Post Request', path: '/dashboard/marketplace' };
     case 'supplier': return { label: '📦 Add Product', path: '/dashboard/marketplace' };
     case 'investor': return { label: '💰 Fund Project', path: '/dashboard/market-intel' };
@@ -82,7 +53,7 @@ const getFabConfig = (role: string) => {
 };
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { t, user, sidebarOpen, setSidebarOpen, unreadCount, language, setLanguage } = useApp();
+  const { t, user, sidebarOpen, setSidebarOpen, unreadCount, language, setLanguage, theme, toggleTheme } = useApp();
   const location = useLocation();
   const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
@@ -98,11 +69,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   const roleColors: Record<string, string> = {
     farmer: 'hsl(var(--emerald))',
-    buyer: 'hsl(200 90% 50%)',
-    investor: 'hsl(43 96% 56%)',
-    supplier: 'hsl(20 30% 50%)',
+    buyer: 'hsl(var(--sky))',
+    investor: 'hsl(var(--gold))',
+    supplier: 'hsl(var(--earth-light))',
     cooperative: 'hsl(270 60% 60%)',
-    admin: 'hsl(0 100% 66%)',
+    admin: 'hsl(var(--alert))',
   };
 
   const roleColor = roleColors[user?.role || 'farmer'];
@@ -110,26 +81,22 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const fabConfig = getFabConfig(user?.role || 'farmer');
 
   return (
-    <div className="flex min-h-screen w-full" style={{ background: 'hsl(var(--background))' }}>
+    <div className="flex min-h-screen w-full bg-background">
       {/* Sidebar - Desktop */}
       {!isMobile && (
-        <aside className="flex flex-col h-screen sticky top-0 transition-all duration-300"
-          style={{ 
-            width: sidebarOpen ? '240px' : '64px', 
-            background: 'hsl(var(--sidebar-background))', 
-            borderRight: '1px solid hsl(var(--border))' 
-          }}>
+        <aside className="flex flex-col h-screen sticky top-0 transition-all duration-300 bg-sidebar border-r border-sidebar-border"
+          style={{ width: sidebarOpen ? '240px' : '64px' }}>
           {/* Logo */}
-          <div className="flex items-center gap-3 px-4 py-5 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
+          <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
             <div className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center" style={{ background: 'var(--gradient-emerald)' }}>
-              <Leaf className="w-4 h-4" style={{ color: 'hsl(var(--primary-foreground))' }} />
+              <Leaf className="w-4 h-4 text-primary-foreground" />
             </div>
             {sidebarOpen && <span className="font-bold text-sm tracking-wide">AGRIPIO</span>}
           </div>
 
           {/* User */}
           {sidebarOpen && user && (
-            <div className="px-4 py-4 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
+            <div className="px-4 py-4 border-b border-sidebar-border">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
                   style={{ background: roleColor + '25', color: roleColor }}>
@@ -151,16 +118,20 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               return (
                 <Link key={item.path} to={item.path}
                   className={`nav-item ${active ? 'active' : ''}`}
-                  title={!sidebarOpen ? t(item.label as any) : undefined}>
+                  title={!sidebarOpen ? (item.label === 'AgriGuide' || item.label === 'Learn IP' || item.label === 'AI Advice' ? item.label : t(item.label as any)) : undefined}>
                   <item.icon className="w-4 h-4 flex-shrink-0" />
-                  {sidebarOpen && <span>{item.label === 'capture' ? 'Media Capture' : t(item.label as any)}</span>}
+                  {sidebarOpen && <span>{item.label === 'capture' ? 'Media Capture' : item.label === 'AgriGuide' ? '🌟 AgriGuide' : item.label === 'Learn IP' ? '📚 Learn IP' : item.label === 'AI Advice' ? 'AI Advice' : t(item.label as any)}</span>}
                 </Link>
               );
             })}
           </nav>
 
           {/* Bottom */}
-          <div className="px-2 py-4 border-t space-y-1" style={{ borderColor: 'hsl(var(--border))' }}>
+          <div className="px-2 py-4 border-t border-sidebar-border space-y-1">
+            <button className="nav-item w-full" onClick={toggleTheme}>
+              {theme === 'light' ? <Moon className="w-4 h-4 flex-shrink-0" /> : <Sun className="w-4 h-4 flex-shrink-0" />}
+              {sidebarOpen && <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>}
+            </button>
             <button className="nav-item w-full" onClick={() => setLanguage(language === 'en' ? 'rw' : 'en')}>
               <Globe className="w-4 h-4 flex-shrink-0" />
               {sidebarOpen && <span>{language === 'en' ? 'Kinyarwanda' : 'English'}</span>}
@@ -177,33 +148,32 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
           {/* Collapse toggle */}
           <button onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="absolute -right-3 top-7 w-6 h-6 rounded-full flex items-center justify-center"
-            style={{ background: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--muted-foreground))' }}>
-            <ChevronRight className="w-3.5 h-3.5" style={{ transform: sidebarOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
+            className="absolute -right-3 top-7 w-6 h-6 rounded-full flex items-center justify-center bg-muted border border-border text-muted-foreground">
+            <ChevronRight className="w-3.5 h-3.5 transition-transform" style={{ transform: sidebarOpen ? 'rotate(180deg)' : 'none' }} />
           </button>
         </aside>
       )}
 
       {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0"
-        style={{
-          backgroundImage: `
-            radial-gradient(ellipse 80% 60% at 50% 0%, hsl(145 60% 8% / 0.4), transparent 60%),
-            radial-gradient(ellipse 60% 40% at 80% 100%, hsl(200 40% 8% / 0.25), transparent 50%),
-            linear-gradient(180deg, hsl(0 0% 4%) 0%, hsl(145 10% 4%) 50%, hsl(0 0% 4%) 100%)
-          `,
-          backgroundAttachment: 'fixed',
-        }}>
-        {/* Subtle grid pattern overlay */}
-        <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.03]"
+      <div className="flex-1 flex flex-col min-w-0 relative">
+        {/* Soft nature gradient background */}
+        <div className="fixed inset-0 pointer-events-none z-0"
+          style={{
+            backgroundImage: `
+              radial-gradient(ellipse 80% 60% at 50% 0%, hsl(var(--emerald) / 0.04), transparent 60%),
+              radial-gradient(ellipse 60% 40% at 80% 100%, hsl(var(--sky) / 0.03), transparent 50%)
+            `,
+          }} />
+        {/* Grid pattern overlay */}
+        <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.02]"
           style={{ backgroundImage: 'linear-gradient(hsl(var(--emerald)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--emerald)) 1px, transparent 1px)', backgroundSize: '50px 50px' }} />
+
         {/* Top bar */}
-        <header className="sticky top-0 z-40 flex items-center justify-between px-4 md:px-6 h-14"
-          style={{ background: 'hsl(var(--sidebar-background) / 0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid hsl(var(--border))' }}>
+        <header className="sticky top-0 z-40 flex items-center justify-between px-4 md:px-6 h-14 bg-background/80 backdrop-blur-xl border-b border-border">
           {isMobile && (
             <div className="flex items-center gap-3">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'var(--gradient-emerald)' }}>
-                <Leaf className="w-4 h-4" style={{ color: 'hsl(var(--primary-foreground))' }} />
+                <Leaf className="w-4 h-4 text-primary-foreground" />
               </div>
               <span className="font-bold text-sm">AGRIPIO</span>
             </div>
@@ -211,13 +181,20 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           {!isMobile && <div />}
 
           <div className="flex items-center gap-2">
+            {/* Theme toggle */}
+            <button onClick={toggleTheme}
+              className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:bg-secondary"
+              title={theme === 'light' ? 'Dark mode' : 'Light mode'}>
+              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" style={{ color: 'hsl(var(--gold))' }} />}
+            </button>
+
             <button onClick={() => setLanguage(language === 'en' ? 'rw' : 'en')}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-              style={{ background: 'hsl(var(--secondary))', color: 'hsl(var(--emerald))', border: '1px solid hsl(var(--emerald) / 0.2)' }}>
+              className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-secondary border border-border"
+              style={{ color: 'hsl(var(--emerald))' }}>
               {language.toUpperCase()}
             </button>
 
-            <button className="relative w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:bg-white/5"
+            <button className="relative w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:bg-secondary"
               onClick={() => { setShowNotifications(!showNotifications); setShowVoice(false); }}>
               <Bell className="w-4 h-4" />
               {unreadCount > 0 && (
@@ -251,7 +228,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         )}
 
         {/* Content */}
-        <main className="flex-1 overflow-auto p-4 md:p-6">
+        <main className="flex-1 overflow-auto p-4 md:p-6 relative z-10">
           {children}
         </main>
 
@@ -266,7 +243,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all"
                   style={{ color: active ? 'hsl(var(--emerald))' : 'hsl(var(--muted-foreground))', background: active ? 'hsl(var(--emerald) / 0.1)' : 'transparent' }}>
                   <item.icon className="w-5 h-5" />
-                  <span className="text-xs">{item.label === 'capture' ? 'Capture' : t(item.label as any).split(' ')[0]}</span>
+                  <span className="text-[10px]">{item.label === 'AgriGuide' ? 'Guide' : item.label === 'Learn IP' ? 'IP' : item.label === 'capture' ? 'Capture' : t(item.label as any).split(' ')[0]}</span>
                 </Link>
               );
             })}
@@ -283,16 +260,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Role-specific FAB */}
       {!showVoice && (
         <div className="fixed bottom-20 md:bottom-6 right-6 z-50 flex flex-col gap-3 items-end">
-          {/* Main FAB */}
-          <button className="px-5 py-3 rounded-full flex items-center gap-2 text-sm font-semibold animate-emerald-glow"
+          <button className="px-5 py-3 rounded-full flex items-center gap-2 text-sm font-semibold animate-emerald-glow shadow-lg"
             onClick={() => navigate(fabConfig.path)}
-            style={{ background: 'var(--gradient-emerald)', boxShadow: 'var(--shadow-emerald-strong)', color: 'hsl(var(--primary-foreground))' }}>
+            style={{ background: 'var(--gradient-emerald)', color: 'hsl(var(--primary-foreground))' }}>
             {fabConfig.label}
           </button>
-          {/* Voice FAB */}
-          <button className="w-12 h-12 rounded-full flex items-center justify-center"
-            onClick={() => setShowVoice(true)}
-            style={{ background: 'hsl(var(--secondary))', border: '1px solid hsl(var(--emerald) / 0.3)' }}>
+          <button className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary border border-border shadow-md"
+            onClick={() => setShowVoice(true)}>
             <Mic className="w-5 h-5" style={{ color: 'hsl(var(--emerald))' }} />
           </button>
         </div>

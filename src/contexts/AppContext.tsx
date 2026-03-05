@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Language, translations, TranslationKey } from '@/lib/translations';
 
 export type UserRole = 'farmer' | 'buyer' | 'investor' | 'supplier' | 'cooperative' | 'admin';
@@ -26,6 +26,8 @@ interface Notification {
   severity: 'info' | 'warning' | 'critical';
 }
 
+export type ThemeMode = 'light' | 'dark';
+
 interface AppContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
@@ -42,6 +44,9 @@ interface AppContextType {
   addNotification: (notif: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
+  theme: ThemeMode;
+  setTheme: (theme: ThemeMode) => void;
+  toggleTheme: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -101,6 +106,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [farmerMode, setFarmerMode] = useState<FarmerMode>('smart');
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [theme, setThemeState] = useState<ThemeMode>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('agripio-theme') as ThemeMode) || 'light';
+    }
+    return 'light';
+  });
+
+  const setTheme = (t: ThemeMode) => {
+    setThemeState(t);
+    localStorage.setItem('agripio-theme', t);
+  };
+
+  const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [theme]);
 
   const t = (key: TranslationKey): string => {
     return translations[language][key] || translations.en[key] || key;
@@ -139,6 +166,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addNotification,
       sidebarOpen,
       setSidebarOpen,
+      theme,
+      setTheme,
+      toggleTheme,
     }}>
       {children}
     </AppContext.Provider>
