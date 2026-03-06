@@ -12,11 +12,8 @@ import InvestorDashboard from "./pages/InvestorDashboard";
 import SupplierDashboard from "./pages/SupplierDashboard";
 import CooperativeDashboard from "./pages/CooperativeDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
-import Marketplace from "./pages/Marketplace";
 import AIGuidance from "./pages/AIGuidance";
 import IoTDevices from "./pages/IoTDevices";
-import WebcamCapture from "./pages/WebcamCapture";
-import MarketIntel from "./pages/MarketIntel";
 import Analytics from "./pages/Analytics";
 import News from "./pages/News";
 import NewsDetail from "./pages/NewsDetail";
@@ -45,11 +42,8 @@ function AppRoutes() {
       <Route path="/" element={<Landing />} />
       <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/dashboard" element={isAuthenticated ? <RoleDashboard /> : <Navigate to="/onboarding" />} />
-      <Route path="/dashboard/marketplace" element={isAuthenticated ? <Marketplace /> : <Navigate to="/onboarding" />} />
       <Route path="/dashboard/ai-guidance" element={isAuthenticated ? <AIGuidance /> : <Navigate to="/onboarding" />} />
       <Route path="/dashboard/devices" element={isAuthenticated ? <IoTDevices /> : <Navigate to="/onboarding" />} />
-      <Route path="/dashboard/capture" element={isAuthenticated ? <WebcamCapture /> : <Navigate to="/onboarding" />} />
-      <Route path="/dashboard/market-intel" element={isAuthenticated ? <MarketIntel /> : <Navigate to="/onboarding" />} />
       <Route path="/dashboard/analytics" element={isAuthenticated ? <Analytics /> : <Navigate to="/onboarding" />} />
       <Route path="/dashboard/news" element={isAuthenticated ? <News /> : <Navigate to="/onboarding" />} />
       <Route path="/dashboard/news/:id" element={isAuthenticated ? <NewsDetail /> : <Navigate to="/onboarding" />} />
