@@ -2,33 +2,36 @@ import { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Settings as SettingsIcon, Users, BookOpen, Globe, Sun, Moon } from 'lucide-react';
+import { Language, languageNames, languageFlags } from '@/lib/translations';
+
+const allLanguages: Language[] = ['en', 'rw', 'fr', 'sw', 'lg', 'zu'];
 
 export default function SettingsPage() {
-  const { user, language, setLanguage, theme, toggleTheme } = useApp();
+  const { user, language, setLanguage, theme, toggleTheme, t } = useApp();
   const [activeTab, setActiveTab] = useState<'general' | 'team' | 'about'>('general');
 
   const tabs = [
-    { id: 'general', label: 'General', icon: SettingsIcon },
-    { id: 'team', label: 'Team', icon: Users },
-    { id: 'about', label: 'About', icon: BookOpen },
+    { id: 'general', label: t('general'), icon: SettingsIcon },
+    { id: 'team', label: t('team'), icon: Users },
+    { id: 'about', label: t('about'), icon: BookOpen },
   ] as const;
 
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in pb-24">
         <div>
-          <h1 className="text-xl font-bold">⚙️ Settings</h1>
+          <h1 className="text-xl font-bold">⚙️ {t('settings')}</h1>
           <p className="text-xs text-muted-foreground mt-0.5">Manage your account & learn about AgriPio</p>
         </div>
 
         <div className="flex gap-2 overflow-x-auto">
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => setActiveTab(t.id)}
+          {tabs.map(tb => (
+            <button key={tb.id} onClick={() => setActiveTab(tb.id)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all"
-              style={activeTab === t.id
+              style={activeTab === tb.id
                 ? { background: 'hsl(var(--emerald) / 0.15)', color: 'hsl(var(--emerald))', border: '1px solid hsl(var(--emerald) / 0.3)' }
                 : { background: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))' }}>
-              <t.icon className="w-4 h-4" /> {t.label}
+              <tb.icon className="w-4 h-4" /> {tb.label}
             </button>
           ))}
         </div>
@@ -39,36 +42,40 @@ export default function SettingsPage() {
             <div className="glass-card p-5">
               <h2 className="font-semibold mb-4 flex items-center gap-2">
                 {theme === 'light' ? <Sun className="w-4 h-4" style={{ color: 'hsl(var(--gold))' }} /> : <Moon className="w-4 h-4" style={{ color: 'hsl(var(--sky))' }} />}
-                Theme
+                {t('theme')}
               </h2>
               <div className="flex gap-3">
                 {[
-                  { mode: 'light' as const, label: '☀️ Light Mode', desc: 'Sunny farm look' },
-                  { mode: 'dark' as const, label: '🌙 Dark Mode', desc: 'Easy on eyes at night' },
-                ].map(t => (
-                  <button key={t.mode} onClick={toggleTheme}
+                  { mode: 'light' as const, label: t('lightMode'), desc: 'Sunny farm look' },
+                  { mode: 'dark' as const, label: t('darkMode'), desc: 'Easy on eyes at night' },
+                ].map(tm => (
+                  <button key={tm.mode} onClick={toggleTheme}
                     className="flex-1 p-4 rounded-xl text-sm font-medium transition-all text-left"
-                    style={theme === t.mode
+                    style={theme === tm.mode
                       ? { background: 'hsl(var(--emerald) / 0.15)', color: 'hsl(var(--emerald))', border: '1px solid hsl(var(--emerald) / 0.3)' }
                       : { background: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))' }}>
-                    <div className="text-lg mb-1">{t.label}</div>
-                    <div className="text-xs text-muted-foreground">{t.desc}</div>
+                    <div className="text-lg mb-1">{tm.label}</div>
+                    <div className="text-xs text-muted-foreground">{tm.desc}</div>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Language */}
+            {/* Language — All 6 */}
             <div className="glass-card p-5">
-              <h2 className="font-semibold mb-4 flex items-center gap-2"><Globe className="w-4 h-4" style={{ color: 'hsl(var(--emerald))' }} /> Language</h2>
-              <div className="flex gap-3">
-                {[{ code: 'en' as const, label: '🇬🇧 English' }, { code: 'rw' as const, label: '🇷🇼 Kinyarwanda' }].map(lang => (
-                  <button key={lang.code} onClick={() => setLanguage(lang.code)}
-                    className="px-5 py-3 rounded-xl text-sm font-medium transition-all"
-                    style={language === lang.code
+              <h2 className="font-semibold mb-4 flex items-center gap-2">
+                <Globe className="w-4 h-4" style={{ color: 'hsl(var(--emerald))' }} />
+                {t('language')} 🌍
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {allLanguages.map(lang => (
+                  <button key={lang} onClick={() => setLanguage(lang)}
+                    className="px-4 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-2"
+                    style={language === lang
                       ? { background: 'hsl(var(--emerald) / 0.15)', color: 'hsl(var(--emerald))', border: '1px solid hsl(var(--emerald) / 0.3)' }
                       : { background: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))' }}>
-                    {lang.label}
+                    <span className="text-lg">{languageFlags[lang]}</span>
+                    <span>{languageNames[lang]}</span>
                   </button>
                 ))}
               </div>
@@ -93,8 +100,8 @@ export default function SettingsPage() {
               <h2 className="text-xl font-bold">AgriPio</h2>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed text-center">
-              AgriPio is a smart app and device for Rwandan farmers, featuring soil monitoring (moisture/pH), 
-              AI guidance with IP advice, project tracking, Bluetooth/IoT integration for plant analysis 
+              AgriPio is a smart app and device for Rwandan farmers, featuring soil monitoring (moisture/pH),
+              AI guidance with IP advice, project tracking, Bluetooth/IoT integration for plant analysis
               and Arduino data flow—all powered by Lovable AI for agriculture innovation.
             </p>
             <div className="text-center mt-6">
