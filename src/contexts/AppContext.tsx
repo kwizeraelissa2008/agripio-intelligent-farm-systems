@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Language, translations, TranslationKey } from '@/lib/translations';
+import { Language, translations, TranslationKey, languageNames } from '@/lib/translations';
 
 export type UserRole = 'farmer' | 'buyer' | 'investor' | 'supplier' | 'cooperative' | 'admin';
 export type FarmerMode = 'smart' | 'manual' | 'market' | 'production';
