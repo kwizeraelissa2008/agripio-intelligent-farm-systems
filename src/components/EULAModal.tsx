@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { Shield, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface EULAModalProps {
-  language: 'en' | 'rw';
+  language: string;
   onAccept: () => void;
 }
 
