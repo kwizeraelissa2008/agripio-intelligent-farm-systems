@@ -3,8 +3,9 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
 import {
   Leaf, LayoutDashboard, Cpu, Bell,
-  Settings, Globe, LogOut, Sun, Moon, Sparkles, BookOpen
+  Settings, Globe, LogOut, Sun, Moon, Sparkles, BookOpen, ChevronDown
 } from 'lucide-react';
+import { Language, languageNames, languageFlags } from '@/lib/translations';
 import NotificationPanel from './NotificationPanel';
 import IPLessonModal from './IPLessonModal';
 
@@ -16,11 +17,14 @@ const navItems = [
   { path: '/dashboard/settings', icon: Settings, label: 'Settings', emoji: '⚙️' },
 ];
 
+const allLanguages: Language[] = ['en', 'rw', 'fr', 'sw', 'lg', 'zu'];
+
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { user, unreadCount, language, setLanguage, theme, toggleTheme } = useApp();
   const location = useLocation();
   const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showLangPicker, setShowLangPicker] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -35,7 +39,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Sidebar - Desktop only */}
       {!isMobile && (
         <aside className="flex flex-col h-screen sticky top-0 w-[220px] bg-sidebar border-r border-sidebar-border">
-          {/* Logo */}
           <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
               style={{ background: 'linear-gradient(135deg, hsl(var(--emerald)), hsl(145 60% 30%))' }}>
@@ -44,7 +47,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <span className="font-bold text-sm tracking-wide">AGRIPIO</span>
           </div>
 
-          {/* User */}
           {user && (
             <div className="px-4 py-4 border-b border-sidebar-border">
               <div className="flex items-center gap-3">
@@ -60,7 +62,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </div>
           )}
 
-          {/* Nav */}
           <nav className="flex-1 px-2 py-4 space-y-1">
             {navItems.map(item => {
               const active = location.pathname === item.path;
@@ -74,16 +75,32 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             })}
           </nav>
 
-          {/* Bottom */}
           <div className="px-2 py-4 border-t border-sidebar-border space-y-1">
             <button className="nav-item w-full" onClick={toggleTheme}>
               {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
               <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
             </button>
-            <button className="nav-item w-full" onClick={() => setLanguage(language === 'en' ? 'rw' : 'en')}>
-              <Globe className="w-4 h-4" />
-              <span>{language === 'en' ? 'Kinyarwanda' : 'English'}</span>
-            </button>
+            {/* Language picker */}
+            <div className="relative">
+              <button className="nav-item w-full" onClick={() => setShowLangPicker(!showLangPicker)}>
+                <Globe className="w-4 h-4" />
+                <span className="flex-1">{languageFlags[language]} {languageNames[language]}</span>
+                <ChevronDown className="w-3 h-3" />
+              </button>
+              {showLangPicker && (
+                <div className="absolute bottom-full left-0 right-0 mb-1 rounded-xl overflow-hidden shadow-lg border border-border z-50"
+                  style={{ background: 'hsl(var(--card))' }}>
+                  {allLanguages.map(lang => (
+                    <button key={lang} onClick={() => { setLanguage(lang); setShowLangPicker(false); }}
+                      className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 transition-all hover:bg-secondary"
+                      style={language === lang ? { color: 'hsl(var(--emerald))', background: 'hsl(var(--emerald) / 0.1)' } : {}}>
+                      <span>{languageFlags[lang]}</span>
+                      <span>{languageNames[lang]}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button className="nav-item w-full text-left" onClick={() => navigate('/')}>
               <LogOut className="w-4 h-4" />
               <span>Sign Out</span>
@@ -94,7 +111,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0 relative">
-        {/* Soft background */}
         <div className="fixed inset-0 pointer-events-none z-0"
           style={{
             backgroundImage: `
@@ -103,7 +119,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             `,
           }} />
 
-        {/* Top bar */}
         <header className="sticky top-0 z-40 flex items-center justify-between px-4 md:px-6 h-14 bg-background/80 backdrop-blur-xl border-b border-border">
           {isMobile ? (
             <div className="flex items-center gap-2">
@@ -120,11 +135,28 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:bg-secondary">
               {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" style={{ color: 'hsl(var(--gold))' }} />}
             </button>
-            <button onClick={() => setLanguage(language === 'en' ? 'rw' : 'en')}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-secondary border border-border"
-              style={{ color: 'hsl(var(--emerald))' }}>
-              {language.toUpperCase()}
-            </button>
+            {/* Language toggle */}
+            <div className="relative">
+              <button onClick={() => setShowLangPicker(!showLangPicker)}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-secondary border border-border flex items-center gap-1"
+                style={{ color: 'hsl(var(--emerald))' }}>
+                {languageFlags[language]} {language.toUpperCase()}
+                <ChevronDown className="w-3 h-3" />
+              </button>
+              {showLangPicker && (
+                <div className="absolute top-full right-0 mt-1 rounded-xl overflow-hidden shadow-lg border border-border z-50 min-w-[160px]"
+                  style={{ background: 'hsl(var(--card))' }}>
+                  {allLanguages.map(lang => (
+                    <button key={lang} onClick={() => { setLanguage(lang); setShowLangPicker(false); }}
+                      className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 transition-all hover:bg-secondary"
+                      style={language === lang ? { color: 'hsl(var(--emerald))', background: 'hsl(var(--emerald) / 0.1)' } : {}}>
+                      <span>{languageFlags[lang]}</span>
+                      <span>{languageNames[lang]}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button className="relative w-9 h-9 rounded-xl flex items-center justify-center hover:bg-secondary"
               onClick={() => setShowNotifications(!showNotifications)}>
               <Bell className="w-4 h-4" />
@@ -138,19 +170,16 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        {/* Notifications */}
         {showNotifications && (
           <div className="absolute top-14 right-4 z-50 w-80 animate-slide-up">
             <NotificationPanel onClose={() => setShowNotifications(false)} />
           </div>
         )}
 
-        {/* Content */}
         <main className="flex-1 overflow-auto p-4 md:p-6 relative z-10">
           {children}
         </main>
 
-        {/* Mobile bottom dock — glassmorphism */}
         {isMobile && (
           <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2 py-2 backdrop-blur-xl border-t border-border"
             style={{ background: 'hsl(var(--background) / 0.85)' }}>
@@ -159,7 +188,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               return (
                 <Link key={item.path} to={item.path}
                   className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-all min-w-[56px]"
-                  style={{ 
+                  style={{
                     color: active ? 'hsl(var(--emerald))' : 'hsl(var(--muted-foreground))',
                     background: active ? 'hsl(var(--emerald) / 0.1)' : 'transparent',
                   }}>
@@ -172,7 +201,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         )}
       </div>
 
-      {/* Daily IP Lesson */}
       <IPLessonModal />
     </div>
   );
