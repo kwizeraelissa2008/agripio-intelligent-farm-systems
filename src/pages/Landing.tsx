@@ -1,8 +1,10 @@
 import { Leaf } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useApp } from '@/contexts/AppContext';
 
 export default function Landing() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useApp();
 
   return (
     <div className="h-screen w-screen flex flex-col items-center justify-center overflow-hidden relative"
@@ -28,20 +30,20 @@ export default function Landing() {
         Agripio
       </h1>
 
-      <p className="text-sm mt-3 text-center animate-fade-in"
-        style={{ color: 'hsl(145 30% 40%)', animationDelay: '0.3s' }}>
-        Smart Agriculture from Soil to Market 🌱
+      <p className="text-base mt-4 text-center animate-fade-in font-medium max-w-sm px-4"
+        style={{ color: 'hsl(145 30% 35%)', animationDelay: '0.3s' }}>
+        From Soil to Market — Smart Farming Starts Here 🌱
       </p>
 
       {/* Buttons */}
       <div className="flex flex-col items-center gap-3 mt-12 animate-slide-up" style={{ animationDelay: '0.4s' }}>
-        <button onClick={() => navigate('/onboarding')}
+        <button onClick={() => navigate(isAuthenticated ? '/dashboard' : '/onboarding')}
           className="px-10 py-4 rounded-2xl text-lg font-bold text-white shadow-xl transition-all hover:scale-105 hover:shadow-2xl active:scale-95"
           style={{ 
             background: 'linear-gradient(135deg, hsl(145 80% 40%), hsl(145 60% 30%))',
             boxShadow: '0 8px 32px hsl(145 80% 40% / 0.3)',
           }}>
-          🌱 Get Started Free
+          🌱 Get Started
         </button>
 
         <button onClick={() => navigate('/onboarding')}
@@ -51,7 +53,7 @@ export default function Landing() {
             border: '2px solid hsl(145 50% 40% / 0.3)',
             background: 'hsl(145 50% 40% / 0.05)',
           }}>
-          Sign In
+          Login
         </button>
       </div>
 

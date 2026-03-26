@@ -1,20 +1,15 @@
 /**
- * AgriPio IoT — Bluetooth, Camera Plant Scan, Arduino Data Flow
+ * AgriPio IoT — Bluetooth, Real AI Plant Scanner, Arduino Data Flow
  * © 2026 AgriPio Team
  */
 import { useState, useRef, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useApp } from '@/contexts/AppContext';
 import {
-  Bluetooth, Camera, Cpu, Wifi, WifiOff, Loader2, RefreshCw,
-  Leaf, X, Activity, CheckCircle, Droplets
+  Bluetooth, Camera, Cpu, Wifi, Loader2, RefreshCw,
+  Leaf, X, Activity, CheckCircle, Droplets, AlertCircle, Shield
 } from 'lucide-react';
-
-const plantScanResults = [
-  { status: 'Healthy', color: 'hsl(var(--emerald))', icon: '🌿', advice: 'Plant looks healthy! Keep watering consistently. 💧' },
-  { status: 'Nutrient Deficiency', color: 'hsl(var(--warning))', icon: '🍂', advice: 'Possible nutrient deficiency. Add organic compost. pH should be 6.0-7.0.' },
-  { status: 'Pest Damage', color: 'hsl(var(--alert))', icon: '🐛', advice: 'Signs of pest activity. Try neem oil spray or companion planting with marigolds.' },
-];
+import { analyzePlant, type PlantAnalysis } from '@/lib/ai';
 
 const jitter = (base: number, range: number) => +(base + (Math.random() - 0.5) * range).toFixed(1);
 
@@ -29,8 +24,10 @@ export default function IoTDevices() {
   // Camera scanner
   const [showScanner, setShowScanner] = useState(false);
   const [scanning, setScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<typeof plantScanResults[0] | null>(null);
+  const [scanResult, setScanResult] = useState<PlantAnalysis | null>(null);
+  const [scanError, setScanError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   // Arduino data
@@ -40,7 +37,6 @@ export default function IoTDevices() {
   const [moistureHistory, setMoistureHistory] = useState<number[]>(() => Array.from({ length: 20 }, () => jitter(68, 8)));
   const [phHistory, setPhHistory] = useState<number[]>(() => Array.from({ length: 20 }, () => jitter(6.2, 0.4)));
 
-  // Live data simulation when Arduino connected
   useEffect(() => {
     if (!arduinoConnected) return;
     const interval = setInterval(() => {
@@ -56,7 +52,20 @@ export default function IoTDevices() {
 
   const connectBluetooth = async () => {
     setBtStatus('connecting');
-    // Simulate BT pairing
+    // Try real Web Bluetooth API first
+    try {
+      if ('bluetooth' in navigator) {
+        const device = await (navigator as any).bluetooth.requestDevice({
+          acceptAllDevices: true,
+          optionalServices: ['battery_service']
+        });
+        setBtStatus('connected');
+        setBtDevice(device.name || 'AgriPio-Sensor');
+        return;
+      }
+    } catch {
+      // Fallback to simulation if user cancels or BT unavailable
+    }
     setTimeout(() => {
       setBtStatus('connected');
       setBtDevice('AgriPio-Sensor-001');
@@ -66,26 +75,68 @@ export default function IoTDevices() {
   const startScanner = async () => {
     setShowScanner(true);
     setScanResult(null);
+    setScanError(null);
     try {
       const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
       streamRef.current = s;
       if (videoRef.current) videoRef.current.srcObject = s;
-    } catch {}
+    } catch {
+      setScanError('Camera access denied. Please allow camera permissions.');
+    }
   };
 
-  const handleScan = () => {
+  const handleScan = async () => {
     setScanning(true);
-    setTimeout(() => {
-      setScanResult(plantScanResults[Math.floor(Math.random() * plantScanResults.length)]);
-      setScanning(false);
+    setScanError(null);
+    
+    // Capture frame from video
+    let imageBase64: string | undefined;
+    if (videoRef.current && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(video, 0, 0);
+        imageBase64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+      }
+    }
+
+    try {
+      const result = await analyzePlant(imageBase64, 'Analyze this plant photo from a Rwandan farm for health issues');
+      setScanResult(result);
       streamRef.current?.getTracks().forEach(t => t.stop());
-    }, 2500);
+    } catch (e) {
+      setScanError('Analysis failed. Please try again.');
+    } finally {
+      setScanning(false);
+    }
   };
 
   const closeScanner = () => {
     setShowScanner(false);
     setScanResult(null);
+    setScanError(null);
     streamRef.current?.getTracks().forEach(t => t.stop());
+  };
+
+  const statusColor = (status: string) => {
+    switch (status) {
+      case 'Healthy': return 'hsl(var(--emerald))';
+      case 'Disease': case 'Pest': return 'hsl(var(--alert))';
+      default: return 'hsl(var(--warning))';
+    }
+  };
+
+  const statusIcon = (status: string) => {
+    switch (status) {
+      case 'Healthy': return '🌿';
+      case 'Disease': return '🦠';
+      case 'Pest': return '🐛';
+      case 'Deficiency': return '🍂';
+      default: return '💧';
+    }
   };
 
   function Sparkline({ data, color, height = 40 }: { data: number[]; color: string; height?: number }) {
@@ -114,6 +165,20 @@ export default function IoTDevices() {
           </p>
         </div>
 
+        {/* Device Status Overview */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="glass-card p-4 text-center">
+            <div className="text-2xl mb-1">{btStatus === 'connected' ? '🟢' : '🔴'}</div>
+            <div className="text-sm font-semibold">{btStatus === 'connected' ? 'Connected' : 'Offline'}</div>
+            <div className="text-xs text-muted-foreground">{btDevice || 'No device'}</div>
+          </div>
+          <div className="glass-card p-4 text-center">
+            <div className="text-2xl mb-1">{arduinoConnected ? '📡' : '📴'}</div>
+            <div className="text-sm font-semibold">{arduinoConnected ? 'Syncing' : 'Not synced'}</div>
+            <div className="text-xs text-muted-foreground">Arduino data</div>
+          </div>
+        </div>
+
         {/* Bluetooth Connection */}
         <div className="glass-card p-5">
           <h2 className="font-semibold mb-3 flex items-center gap-2">
@@ -134,7 +199,7 @@ export default function IoTDevices() {
                 {btStatus === 'connected' ? `✅ ${btDevice}` : btStatus === 'connecting' ? '🔄 Pairing...' : 'No device paired'}
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {btStatus === 'connected' ? 'Receiving sensor data via Bluetooth' : 'Tap to pair with AgriPio sensor'}
+                {btStatus === 'connected' ? 'Receiving sensor data' : 'Tap to pair with AgriPio sensor'}
               </p>
             </div>
             {btStatus !== 'connected' && (
@@ -147,15 +212,17 @@ export default function IoTDevices() {
           </div>
         </div>
 
-        {/* Camera: Plant Scanner */}
+        {/* Camera: Plant Scanner with Real AI */}
         <div className="glass-card p-5">
           <h2 className="font-semibold mb-3 flex items-center gap-2">
             <Camera className="w-4 h-4" style={{ color: 'hsl(var(--emerald))' }} />
-            {isRw ? 'Suzuma Igihingwa' : 'Plant Health Scanner'}
+            {isRw ? 'Suzuma Igihingwa' : 'AI Plant Scanner'}
           </h2>
           <p className="text-xs text-muted-foreground mb-3">
-            {isRw ? 'Fata ifoto y\'igihingwa cyawe, AI izagisuzuma.' : 'Take a photo of your plant and AI will analyze its health.'}
+            {isRw ? 'Fata ifoto, AI izagisuzuma (Lovable AI)' : 'Capture a photo — real AI analysis powered by Lovable AI'}
           </p>
+          
+          <canvas ref={canvasRef} className="hidden" />
           
           {!showScanner ? (
             <button onClick={startScanner}
@@ -176,18 +243,39 @@ export default function IoTDevices() {
                 {scanResult && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"
                     style={{ background: 'hsl(var(--card) / 0.95)' }}>
-                    <span className="text-5xl mb-3">{scanResult.icon}</span>
-                    <h3 className="text-lg font-bold mb-2" style={{ color: scanResult.color }}>{scanResult.status}</h3>
-                    <p className="text-sm text-muted-foreground">{scanResult.advice}</p>
+                    <span className="text-5xl mb-3">{statusIcon(scanResult.status)}</span>
+                    <h3 className="text-lg font-bold mb-1" style={{ color: statusColor(scanResult.status) }}>{scanResult.status}</h3>
+                    <p className="text-xs text-muted-foreground mb-1">Confidence: {scanResult.confidence}%</p>
+                    <p className="text-sm text-muted-foreground mb-3">{scanResult.diagnosis}</p>
+                    {scanResult.advice.length > 0 && (
+                      <div className="text-left w-full">
+                        <p className="text-xs font-semibold mb-1">Actions:</p>
+                        {scanResult.advice.map((a, i) => (
+                          <p key={i} className="text-xs text-muted-foreground">• {a}</p>
+                        ))}
+                      </div>
+                    )}
+                    {scanResult.ipTip && (
+                      <div className="mt-3 flex items-start gap-2 p-2 rounded-lg text-left w-full" 
+                        style={{ background: 'hsl(var(--gold) / 0.1)' }}>
+                        <Shield className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: 'hsl(var(--gold))' }} />
+                        <p className="text-xs" style={{ color: 'hsl(var(--gold))' }}>{scanResult.ipTip}</p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
+              {scanError && (
+                <div className="flex items-center gap-2 p-3 rounded-xl text-sm" style={{ background: 'hsl(var(--alert) / 0.1)', color: 'hsl(var(--alert))' }}>
+                  <AlertCircle className="w-4 h-4" /> {scanError}
+                </div>
+              )}
               <div className="flex gap-2">
                 {!scanResult && !scanning && (
                   <button onClick={handleScan}
                     className="flex-1 py-3 rounded-xl text-sm font-semibold"
                     style={{ background: 'hsl(var(--emerald) / 0.15)', color: 'hsl(var(--emerald))', border: '1px solid hsl(var(--emerald) / 0.3)' }}>
-                    🔍 {isRw ? 'Suzuma' : 'Analyze'}
+                    🔍 {isRw ? 'Suzuma na AI' : 'Analyze with AI'}
                   </button>
                 )}
                 <button onClick={closeScanner}
@@ -224,7 +312,6 @@ export default function IoTDevices() {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Moisture */}
               <div className="p-4 rounded-xl bg-secondary border border-border">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
@@ -240,7 +327,6 @@ export default function IoTDevices() {
                 <Sparkline data={moistureHistory} color="hsl(200 80% 55%)" />
               </div>
 
-              {/* pH */}
               <div className="p-4 rounded-xl bg-secondary border border-border">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
@@ -259,7 +345,6 @@ export default function IoTDevices() {
           )}
         </div>
 
-        {/* Copyright */}
         <div className="text-center pt-2">
           <p className="text-xs font-medium" style={{ color: 'hsl(var(--emerald))' }}>© 2026 AgriPio Team</p>
         </div>
