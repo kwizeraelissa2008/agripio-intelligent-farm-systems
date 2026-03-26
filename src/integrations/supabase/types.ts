@@ -14,7 +14,165 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          message_type: string | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          message_type?: string | null
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          message_type?: string | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      device_data: {
+        Row: {
+          device_id: string
+          id: string
+          moisture: number | null
+          ph: number | null
+          recorded_at: string
+          temperature: number | null
+          user_id: string
+        }
+        Insert: {
+          device_id: string
+          id?: string
+          moisture?: number | null
+          ph?: number | null
+          recorded_at?: string
+          temperature?: number | null
+          user_id: string
+        }
+        Update: {
+          device_id?: string
+          id?: string
+          moisture?: number | null
+          ph?: number | null
+          recorded_at?: string
+          temperature?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      farming_projects: {
+        Row: {
+          budget: number | null
+          created_at: string
+          crop: string | null
+          description: string | null
+          farm_size: number | null
+          id: string
+          ip_type: string | null
+          plan: Json | null
+          progress: number | null
+          status: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          budget?: number | null
+          created_at?: string
+          crop?: string | null
+          description?: string | null
+          farm_size?: number | null
+          id?: string
+          ip_type?: string | null
+          plan?: Json | null
+          progress?: number | null
+          status?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          budget?: number | null
+          created_at?: string
+          crop?: string | null
+          description?: string | null
+          farm_size?: number | null
+          id?: string
+          ip_type?: string | null
+          plan?: Json | null
+          progress?: number | null
+          status?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          crops: string[] | null
+          display_name: string
+          farm_size: number | null
+          farm_type: string | null
+          has_device: boolean | null
+          id: string
+          language: string | null
+          location_lat: number | null
+          location_lng: number | null
+          location_name: string | null
+          phone: string | null
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          crops?: string[] | null
+          display_name: string
+          farm_size?: number | null
+          farm_type?: string | null
+          has_device?: boolean | null
+          id?: string
+          language?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          location_name?: string | null
+          phone?: string | null
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          crops?: string[] | null
+          display_name?: string
+          farm_size?: number | null
+          farm_type?: string | null
+          has_device?: boolean | null
+          id?: string
+          language?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          location_name?: string | null
+          phone?: string | null
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
