@@ -17,7 +17,7 @@ const topSuppliers = [
 ];
 
 export default function BuyerDashboard() {
-  const { user } = useApp();
+  const { user, profile } = useAuth();
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
