@@ -26,7 +26,7 @@ export default function BuyerDashboard() {
       <div className="space-y-6 animate-fade-in">
         <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
           <div>
-            <h1 className="text-2xl font-bold">{greeting}, {user?.name?.split(' ')[0] || 'Buyer'} 🛒</h1>
+            <h1 className="text-2xl font-bold">{greeting}, {profile?.display_name?.split(' ')[0] || 'Buyer'} 🛒</h1>
             <p className="text-muted-foreground text-sm mt-0.5">Buyer Dashboard • Procurement & Supply Intelligence</p>
           </div>
         </div>
