@@ -1,3 +1,4 @@
+import { useAuth } from '@/hooks/useAuth';
 import { useApp } from '@/contexts/AppContext';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Droplets, Sparkles, AlertTriangle, ChevronRight, Leaf } from 'lucide-react';
@@ -14,12 +15,11 @@ const alerts = [
 ];
 
 const aiAdvice = [
-  { emoji: '🌾', title: 'Plant maize + beans together', desc: 'Intercropping increases yield by 25%. This combo is proven in Kigali region soil.' },
-  { emoji: '💧', title: 'Mulch your root zones', desc: 'Dry period expected in 5 days. Mulching retains moisture and protects soil life.' },
-  { emoji: '🧪', title: 'Apply organic compost', desc: 'Nitrogen at 45 mg/kg is below ideal 60. Split 20kg now + 20kg in 2 weeks.' },
-  { emoji: '🛡️', title: 'Protect your innovation!', desc: 'Got a unique farming method? It could be a trade secret or patent. Ask AgriGuide!' },
-  { emoji: '🐛', title: 'Pest prevention tip', desc: 'Plant marigolds near tomatoes — natural repellent. Neem oil spray every 7 days.' },
-  { emoji: '📈', title: 'Market opportunity', desc: 'Tomatoes selling at RWF 900/kg in Kigali. Best time to harvest and sell!' },
+  { emoji: '🌾', title: 'Plant maize + beans together', desc: 'Intercropping increases yield by 25%.' },
+  { emoji: '💧', title: 'Mulch your root zones', desc: 'Dry period expected in 5 days. Mulching retains moisture.' },
+  { emoji: '🧪', title: 'Apply organic compost', desc: 'Nitrogen at 45 mg/kg is below ideal. Split 20kg now + 20kg in 2 weeks.' },
+  { emoji: '🛡️', title: 'Protect your innovation!', desc: 'Got a unique farming method? Ask AgriGuide about IP rights!' },
+  { emoji: '📈', title: 'Market opportunity', desc: 'Tomatoes at RWF 900/kg in Kigali. Best time to sell!' },
 ];
 
 function ScoreMeter({ score, color }: { score: number; color: string }) {
@@ -31,20 +31,19 @@ function ScoreMeter({ score, color }: { score: number; color: string }) {
 }
 
 export default function FarmerDashboard() {
-  const { user } = useApp();
+  const { profile } = useAuth();
+  const { t } = useApp();
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
   return (
     <DashboardLayout>
       <div className="space-y-5 animate-fade-in pb-24">
-        {/* Greeting */}
         <div>
-          <h1 className="text-xl font-bold">{greeting}, {user?.name?.split(' ')[0] || 'Farmer'} 👋</h1>
+          <h1 className="text-xl font-bold">{greeting}, {profile?.display_name?.split(' ')[0] || 'Farmer'} 👋</h1>
           <p className="text-muted-foreground text-xs mt-0.5">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
         </div>
 
-        {/* Alerts */}
         {alerts.map((a, i) => (
           <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-xl"
             style={{ background: a.color + '10', border: `1px solid ${a.color}25` }}>
@@ -53,12 +52,11 @@ export default function FarmerDashboard() {
           </div>
         ))}
 
-        {/* Soil Intelligence — Only Moisture & pH */}
         <div className="glass-card p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold flex items-center gap-2">
               <Leaf className="w-4 h-4" style={{ color: 'hsl(var(--emerald))' }} />
-              Soil Intelligence
+              {t('soilIntelligence')}
             </h2>
             <div className="flex items-center gap-1.5">
               <span className="status-dot online" />
@@ -84,11 +82,10 @@ export default function FarmerDashboard() {
           </div>
         </div>
 
-        {/* AI Advice Cards */}
         <div>
           <h2 className="font-semibold mb-3 flex items-center gap-2">
             <Sparkles className="w-4 h-4" style={{ color: 'hsl(var(--emerald))' }} />
-            AI Advice for You
+            {t('aiAdvice')}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {aiAdvice.map((a, i) => (
@@ -106,22 +103,20 @@ export default function FarmerDashboard() {
           </div>
         </div>
 
-        {/* CTA: Chat with AgriGuide */}
         <Link to="/dashboard/ai-guidance"
           className="glass-card p-5 flex items-center gap-4 transition-all hover:scale-[1.01] cursor-pointer group block"
           style={{ border: '1px solid hsl(var(--emerald) / 0.3)' }}>
           <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, hsl(var(--emerald)), hsl(145 60% 30%))' }}>
-            <Sparkles className="w-6 h-6 text-white" />
+            style={{ background: 'var(--gradient-emerald)' }}>
+            <Sparkles className="w-6 h-6 text-primary-foreground" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold group-hover:text-[hsl(var(--emerald))] transition-colors">Chat with AgriGuide 🌟</h3>
-            <p className="text-xs text-muted-foreground">Ask anything about farming, get plans & IP advice!</p>
+            <h3 className="font-semibold group-hover:text-primary transition-colors">{t('chatWithGuide')}</h3>
+            <p className="text-xs text-muted-foreground">{t('projectCreation')}</p>
           </div>
           <ChevronRight className="w-5 h-5 text-muted-foreground" />
         </Link>
 
-        {/* Copyright */}
         <div className="text-center pt-2">
           <p className="text-xs font-medium" style={{ color: 'hsl(var(--emerald))' }}>© 2026 AgriPio Team</p>
         </div>

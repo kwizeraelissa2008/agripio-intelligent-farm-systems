@@ -3,29 +3,59 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AppProvider, useApp } from "@/contexts/AppContext";
+import { AppProvider } from "@/contexts/AppContext";
+import { useAuth } from "@/hooks/useAuth";
 import Landing from "./pages/Landing";
+import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import FarmerDashboard from "./pages/FarmerDashboard";
+import BuyerDashboard from "./pages/BuyerDashboard";
 import AIGuidance from "./pages/AIGuidance";
 import IoTDevices from "./pages/IoTDevices";
 import IPLearning from "./pages/IPLearning";
+import Marketplace from "./pages/Marketplace";
 import SettingsPage from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return (
+    <div className="h-screen flex items-center justify-center bg-background">
+      <div className="text-center">
+        <div className="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center animate-pulse" style={{ background: 'var(--gradient-emerald)' }}>
+          <span className="text-white text-lg">🌱</span>
+        </div>
+        <p className="text-sm text-muted-foreground">Loading...</p>
+      </div>
+    </div>
+  );
+  if (!user) return <Navigate to="/auth" />;
+  return <>{children}</>;
+}
+
+function RoleDashboard() {
+  const { profile } = useAuth();
+  const role = profile?.role || 'farmer';
+  switch (role) {
+    case 'buyer': return <BuyerDashboard />;
+    default: return <FarmerDashboard />;
+  }
+}
+
 function AppRoutes() {
-  const { isAuthenticated } = useApp();
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
-      <Route path="/onboarding" element={<Onboarding />} />
-      <Route path="/dashboard" element={isAuthenticated ? <FarmerDashboard /> : <Navigate to="/onboarding" />} />
-      <Route path="/dashboard/ai-guidance" element={isAuthenticated ? <AIGuidance /> : <Navigate to="/onboarding" />} />
-      <Route path="/dashboard/devices" element={isAuthenticated ? <IoTDevices /> : <Navigate to="/onboarding" />} />
-      <Route path="/dashboard/ip-learning" element={isAuthenticated ? <IPLearning /> : <Navigate to="/onboarding" />} />
-      <Route path="/dashboard/settings" element={isAuthenticated ? <SettingsPage /> : <Navigate to="/onboarding" />} />
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+      <Route path="/dashboard" element={<ProtectedRoute><RoleDashboard /></ProtectedRoute>} />
+      <Route path="/dashboard/ai-guidance" element={<ProtectedRoute><AIGuidance /></ProtectedRoute>} />
+      <Route path="/dashboard/devices" element={<ProtectedRoute><IoTDevices /></ProtectedRoute>} />
+      <Route path="/dashboard/ip-learning" element={<ProtectedRoute><IPLearning /></ProtectedRoute>} />
+      <Route path="/dashboard/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
+      <Route path="/dashboard/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

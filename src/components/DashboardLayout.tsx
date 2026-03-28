@@ -1,9 +1,10 @@
 import { useState, useEffect, ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
+import { useAuth } from '@/hooks/useAuth';
 import {
   Leaf, LayoutDashboard, Cpu, Bell,
-  Settings, Globe, LogOut, Sun, Moon, Sparkles, BookOpen, ChevronDown
+  Settings, Globe, LogOut, Sun, Moon, Sparkles, BookOpen, ShoppingCart, ChevronDown
 } from 'lucide-react';
 import { Language, languageNames, languageFlags } from '@/lib/translations';
 import NotificationPanel from './NotificationPanel';
@@ -12,7 +13,7 @@ import IPLessonModal from './IPLessonModal';
 const navItems = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Home', emoji: '🏠' },
   { path: '/dashboard/ai-guidance', icon: Sparkles, label: 'Guide', emoji: '🌟' },
-  { path: '/dashboard/ip-learning', icon: BookOpen, label: 'IP', emoji: '📚' },
+  { path: '/dashboard/marketplace', icon: ShoppingCart, label: 'Market', emoji: '🛒' },
   { path: '/dashboard/devices', icon: Cpu, label: 'IoT', emoji: '📡' },
   { path: '/dashboard/settings', icon: Settings, label: 'Settings', emoji: '⚙️' },
 ];
@@ -20,7 +21,8 @@ const navItems = [
 const allLanguages: Language[] = ['en', 'rw', 'fr', 'sw', 'lg', 'zu'];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { user, unreadCount, language, setLanguage, theme, toggleTheme } = useApp();
+  const { unreadCount, language, setLanguage, theme, toggleTheme, t } = useApp();
+  const { profile, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
@@ -34,6 +36,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
   return (
     <div className="flex min-h-screen w-full bg-background">
       {/* Sidebar - Desktop only */}
@@ -41,22 +48,22 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <aside className="flex flex-col h-screen sticky top-0 w-[220px] bg-sidebar border-r border-sidebar-border">
           <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, hsl(var(--emerald)), hsl(145 60% 30%))' }}>
+              style={{ background: 'var(--gradient-emerald)' }}>
               <Leaf className="w-4 h-4 text-white" />
             </div>
             <span className="font-bold text-sm tracking-wide">AGRIPIO</span>
           </div>
 
-          {user && (
+          {profile && (
             <div className="px-4 py-4 border-b border-sidebar-border">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
                   style={{ background: 'hsl(var(--emerald) / 0.2)', color: 'hsl(var(--emerald))' }}>
-                  {user.name.charAt(0)}
+                  {profile.display_name?.charAt(0) || '?'}
                 </div>
                 <div>
-                  <div className="text-sm font-medium truncate">{user.name}</div>
-                  <div className="text-xs capitalize" style={{ color: 'hsl(var(--emerald))' }}>{user.role}</div>
+                  <div className="text-sm font-medium truncate">{profile.display_name}</div>
+                  <div className="text-xs capitalize" style={{ color: 'hsl(var(--emerald))' }}>{profile.role}</div>
                 </div>
               </div>
             </div>
@@ -73,14 +80,18 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </Link>
               );
             })}
+            <Link to="/dashboard/ip-learning"
+              className={`nav-item ${location.pathname === '/dashboard/ip-learning' ? 'active' : ''}`}>
+              <BookOpen className="w-4 h-4 flex-shrink-0" />
+              <span>📚 IP</span>
+            </Link>
           </nav>
 
           <div className="px-2 py-4 border-t border-sidebar-border space-y-1">
             <button className="nav-item w-full" onClick={toggleTheme}>
               {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-              <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+              <span>{theme === 'light' ? t('darkMode') : t('lightMode')}</span>
             </button>
-            {/* Language picker */}
             <div className="relative">
               <button className="nav-item w-full" onClick={() => setShowLangPicker(!showLangPicker)}>
                 <Globe className="w-4 h-4" />
@@ -101,7 +112,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </div>
               )}
             </div>
-            <button className="nav-item w-full text-left" onClick={() => navigate('/')}>
+            <button className="nav-item w-full text-left" onClick={handleSignOut}>
               <LogOut className="w-4 h-4" />
               <span>Sign Out</span>
             </button>
@@ -123,7 +134,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           {isMobile ? (
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, hsl(var(--emerald)), hsl(145 60% 30%))' }}>
+                style={{ background: 'var(--gradient-emerald)' }}>
                 <Leaf className="w-4 h-4 text-white" />
               </div>
               <span className="font-bold text-sm">AGRIPIO</span>
@@ -135,7 +146,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:bg-secondary">
               {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" style={{ color: 'hsl(var(--gold))' }} />}
             </button>
-            {/* Language toggle */}
             <div className="relative">
               <button onClick={() => setShowLangPicker(!showLangPicker)}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium bg-secondary border border-border flex items-center gap-1"
