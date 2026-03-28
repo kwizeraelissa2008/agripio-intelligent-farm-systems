@@ -41,6 +41,36 @@ export type Database = {
         }
         Relationships: []
       }
+      community_videos: {
+        Row: {
+          author_name: string
+          created_at: string
+          description: string | null
+          id: string
+          title: string
+          user_id: string
+          video_url: string
+        }
+        Insert: {
+          author_name?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          title: string
+          user_id: string
+          video_url: string
+        }
+        Update: {
+          author_name?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          title?: string
+          user_id?: string
+          video_url?: string
+        }
+        Relationships: []
+      }
       device_data: {
         Row: {
           device_id: string
@@ -114,6 +144,57 @@ export type Database = {
           progress?: number | null
           status?: string | null
           title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      marketplace_listings: {
+        Row: {
+          category: string | null
+          created_at: string
+          crop: string
+          description: string | null
+          id: string
+          image_url: string | null
+          location: string | null
+          media_urls: string[] | null
+          price: string
+          quantity: string
+          status: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          crop: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          media_urls?: string[] | null
+          price: string
+          quantity: string
+          status?: string | null
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          crop?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          media_urls?: string[] | null
+          price?: string
+          quantity?: string
+          status?: string | null
+          type?: string
           updated_at?: string
           user_id?: string
         }
