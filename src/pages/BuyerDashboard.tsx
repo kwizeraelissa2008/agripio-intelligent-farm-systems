@@ -1,5 +1,6 @@
 import DashboardLayout from '@/components/DashboardLayout';
 import { useApp } from '@/contexts/AppContext';
+import { useAuth } from '@/hooks/useAuth';
 import { ShoppingBag, TrendingUp, Package, MapPin, Star, Search, CheckCircle, ArrowRight } from 'lucide-react';
 
 const openRequests = [
