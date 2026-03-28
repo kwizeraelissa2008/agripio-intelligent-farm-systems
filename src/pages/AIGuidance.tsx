@@ -5,6 +5,7 @@
 import { useState, useRef, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useApp } from '@/contexts/AppContext';
+import { useAuth } from '@/hooks/useAuth';
 import {
   Send, Sparkles, RotateCcw,
   Target, Bot, User, Shield, FolderOpen, Plus, CheckCircle, AlertCircle
