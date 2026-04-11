@@ -9,11 +9,11 @@ import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import FarmerDashboard from "./pages/FarmerDashboard";
-import BuyerDashboard from "./pages/BuyerDashboard";
 import AIGuidance from "./pages/AIGuidance";
+import MyProjects from "./pages/MyProjects";
 import IoTDevices from "./pages/IoTDevices";
 import IPLearning from "./pages/IPLearning";
-import Marketplace from "./pages/Marketplace";
+import  ClubHub  from "./pages/ClubHub";
 import SettingsPage from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -35,26 +35,18 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function RoleDashboard() {
-  const { profile } = useAuth();
-  const role = profile?.role || 'farmer';
-  switch (role) {
-    case 'buyer': return <BuyerDashboard />;
-    default: return <FarmerDashboard />;
-  }
-}
-
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-      <Route path="/dashboard" element={<ProtectedRoute><RoleDashboard /></ProtectedRoute>} />
+      <Route path="/dashboard" element={<ProtectedRoute><FarmerDashboard /></ProtectedRoute>} />
       <Route path="/dashboard/ai-guidance" element={<ProtectedRoute><AIGuidance /></ProtectedRoute>} />
+      <Route path="/dashboard/my-projects" element={<ProtectedRoute><MyProjects /></ProtectedRoute>} />
       <Route path="/dashboard/devices" element={<ProtectedRoute><IoTDevices /></ProtectedRoute>} />
       <Route path="/dashboard/ip-learning" element={<ProtectedRoute><IPLearning /></ProtectedRoute>} />
-      <Route path="/dashboard/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
+      <Route path="/dashboard/club-hub" element={<ProtectedRoute><ClubHub /></ProtectedRoute>} />
       <Route path="/dashboard/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>

@@ -45,7 +45,7 @@ export default function AIGuidance() {
   const [messages, setMessages] = useState<UIMessage[]>([
     {
       id: '0', role: 'assistant',
-      content: `👋 Hello${user?.name ? `, ${user.name.split(' ')[0]}` : ''}! I'm **AgriGuide**, your AI farming mentor powered by real AI! 🌱\n\nI can help you with crops, soil, irrigation, pests, market timing, and **protecting your innovations with IP rights**! 🛡️\n\nTell me about your project — let's innovate! 😊`,
+      content: `👋 Hello${user?.name ? `, ${user.name.split(' ')[0]}` : ''}! I'm **AgriGuide**, your AI farming mentor! 🌱\n\nI provide practical farming advice + natural IP rights guidance in every response. I can help you:\n\n• Crop selection and soil management\n• Irrigation and pest control\n• **Create and track farming projects with IP protection**\n• **Copyright guidance for your farming guides, videos, photos**\n• Market timing and business planning\n\n**Tell me about your project or farm 🌱** and I'll help you succeed while protecting your innovations! �️`,
       timestamp: new Date(), type: 'text',
     }
   ]);

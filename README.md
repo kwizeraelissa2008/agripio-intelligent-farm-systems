@@ -1,73 +1,265 @@
-# Welcome to your Lovable project
+# AgriPio - Smart Farming with IP Protection
 
-## Project info
+** 2026 AgriPio Team**  
+**Rwanda National IP Club Winners 2026 – Competing at ARIPO Regional**
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+**Team:** KWIZERA Elissa · INEZA Elyon Ivo · INEZA Aliza · ISHIMWE Ornella
 
-## How can I edit this code?
+## 🌱 About AgriPio
 
-There are several ways of editing your application.
+AgriPio is a clean, production-grade full-stack web application designed primarily for farmers and people interested in agriculture. It helps farmers improve productivity by learning about Intellectual Property Rights — especially Copyright and Related Rights — so they understand how to protect their own creative agricultural works (farming guides, videos, photos, new methods, software, etc.).
 
-**Use Lovable**
+This directly supports the ARIPO theme: **"Intellectual Property and the Creative Industries: a perfect tool for development"**.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## 🚀 Features
 
-Changes made via Lovable will be committed automatically to this repo.
+### Core Features
+- **Landing Page** - Non-scrollable hero with glowing "Agripio" branding
+- **Onboarding** - Account creation with mandatory IP Terms & EULA
+- **Farmer Dashboard** - Quick AI Guide preview and prominent Club Hub button
+- **AI Farm Guide** - Real streaming conversational AI with IP integration
+- **My Projects** - AI turns conversations into trackable farming projects with IP protection
+- **IP Learning (Copyright Shield)** - Farmer-friendly lessons on Copyright and Related Rights
+- **IoT Module** - Bluetooth pairing simulation, plant camera, live sensor dashboard
+- **Club Hub** - Team page showing 20 club members and resources
 
-**Use your preferred IDE**
+### Key Features
+- Multi-language support (English + Kinyarwanda + French + Swahili)
+- Mobile-first, low-bandwidth friendly design
+- Emerald green + gold accent theme
+- Strong but natural IP respect visible everywhere
+- All data from Supabase (real data, no fake)
+- Clean, farmer-friendly design — big buttons, simple language
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🛠 Tech Stack
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **Frontend:** React 18.3.1 + TypeScript + Vite
+- **Styling:** Tailwind CSS + shadcn/ui
+- **Backend:** Supabase (Auth + Postgres + Realtime + Storage)
+- **AI:** Anthropic Claude for AI chat
+- **Deployment:** Production-ready with environment variables
 
-Follow these steps:
+## 📋 Prerequisites
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+- Node.js 18+ 
+- npm or yarn
+- Supabase account and project
+- Anthropic Claude API key
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 🚀 Quick Start
 
-# Step 3: Install the necessary dependencies.
-npm i
+### 1. Clone and Install
+```bash
+git clone <repository-url>
+cd agripio-intelligent-farm-systems
+npm install
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### 2. Environment Setup
+Create a `.env.local` file in root:
+```env
+# Supabase
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Anthropic Claude
+VITE_ANTHROPIC_API_KEY=your_anthropic_api_key
+```
+
+### 3. Database Setup
+Run Supabase migrations:
+```bash
+supabase db push
+```
+
+### 4. Start Development
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Visit `http://localhost:5173` to see AgriPio running.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📁 Project Structure
 
-**Use GitHub Codespaces**
+```
+src/
+├── components/          # Reusable UI components
+├── contexts/           # React contexts (App, Auth)
+├── hooks/             # Custom React hooks
+├── integrations/       # Supabase integration
+├── lib/              # Utilities and AI functions
+├── pages/             # Main application pages
+├── test/             # Test files
+└── types/            # TypeScript type definitions
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🌍 Multi-Language Support
 
-## What technologies are used for this project?
+AgriPio supports 6 languages:
+- English
+- Kinyarwanda  
+- Français
+- Kiswahili
+- Luganda
+- isiZulu
 
-This project is built with:
+Language files are located in `src/lib/translations.ts`.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🛡️ IP Protection Features
 
-## How can I deploy this project?
+### Copyright Shield
+- Automatic copyright notices on all content
+- IP education integrated throughout the app
+- Copyright protection checklists for projects
+- Watermarked PDF generation for project exports
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+### IP Learning Module
+- Farmer-friendly lessons on Copyright and Related Rights
+- Real farming scenarios and examples
+- Interactive quizzes and certificates
+- IP Respect Pledge option
 
-## Can I connect a custom domain to my Lovable project?
+## 📱 Mobile-First Design
 
-Yes, you can!
+- Responsive design optimized for mobile devices
+- Low-bandwidth friendly with shimmer loaders
+- Touch-friendly buttons and interactions
+- Progressive Web App ready
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 🤖 AI Integration
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+### AgriGuide AI Assistant
+- Streaming conversational AI powered by Claude
+- Natural IP rights guidance in every response
+- Project creation and tracking
+- Practical farming advice + IP protection tips
+
+### Plant Scanner
+- Camera-based plant disease detection
+- AI-powered analysis with recommendations
+- IP tips for protecting farming innovations
+
+## 🔧 IoT Features
+
+### Bluetooth Integration
+- Real Web Bluetooth API support
+- Fallback simulation for testing
+- Sensor data visualization
+- Live connection status
+
+### Arduino Data Flow
+- Real-time sensor data (moisture, pH)
+- Historical data visualization
+- Sync status and alerts
+
+## 👥 Club Hub
+
+### Team Members
+- 20 club members with profiles
+- Core team highlighted (4 members)
+- Session attendance tracking
+- Expertise areas displayed
+
+### Resources
+- IP learning materials
+- ARIPO competition information
+- Community video sharing
+- Extra learning resources
+
+## 📊 Data Management
+
+### Supabase Integration
+- Authentication with role-based access
+- Real-time data synchronization
+- File storage for images and videos
+- PostgreSQL database with proper relationships
+
+### Key Tables
+- `profiles` - User profiles and farm data
+- `projects` - Farming projects with IP status
+- `community_videos` - User-generated content
+- `ip_learning_progress` - Learning module progress
+
+## 🎨 Design System
+
+### Theme
+- **Primary:** Emerald Green (#10b981)
+- **Accent:** Gold (#f59e0b)
+- **Clean:** White and gray backgrounds
+- **Farmer-friendly:** Large buttons, simple language
+
+### Components
+- shadcn/ui component library
+- Custom glass-card effects
+- Gradient backgrounds and buttons
+- Smooth animations and transitions
+
+## 🧪 Testing
+
+```bash
+# Run tests
+npm run test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+## 🚀 Deployment
+
+### Environment Variables
+Required for production:
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_ANTHROPIC_API_KEY`
+
+### Build and Deploy
+```bash
+npm run build
+# Deploy the dist/ folder to your hosting provider
+```
+
+## 🔒 Security
+
+- Supabase Row Level Security (RLS) enabled
+- API keys stored in environment variables
+- IP protection notices throughout
+- Copyright watermarks on exports
+- Secure file uploads with validation
+
+## 📈 Performance
+
+- Optimized React components with memo
+- Lazy loading for heavy components
+- Image optimization and compression
+- Efficient state management
+- Progressive loading with skeleton screens
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📄 License
+
+ 2026 AgriPio Team. All rights reserved.
+
+This application itself is protected by copyright and demonstrates IP protection principles throughout.
+
+## 📞 Support
+
+For support or questions:
+- Team: KWIZERA Elissa · INEZA Elyon Ivo · INEZA Aliza · ISHIMWE Ornella
+- Competition: Rwanda National IP Club Winners 2026 – Competing at ARIPO Regional
+
+---
+
+** Smart farming tools + Copyright education for better productivity**

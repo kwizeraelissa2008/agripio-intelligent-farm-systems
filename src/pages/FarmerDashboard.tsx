@@ -1,7 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useApp } from '@/contexts/AppContext';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Droplets, Sparkles, AlertTriangle, ChevronRight, Leaf } from 'lucide-react';
+import { Droplets, Sparkles, AlertTriangle, ChevronRight, Leaf, Users, Shield, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const soilMetrics = [
@@ -19,7 +19,6 @@ const aiAdvice = [
   { emoji: '💧', title: 'Mulch your root zones', desc: 'Dry period expected in 5 days. Mulching retains moisture.' },
   { emoji: '🧪', title: 'Apply organic compost', desc: 'Nitrogen at 45 mg/kg is below ideal. Split 20kg now + 20kg in 2 weeks.' },
   { emoji: '🛡️', title: 'Protect your innovation!', desc: 'Got a unique farming method? Ask AgriGuide about IP rights!' },
-  { emoji: '📈', title: 'Market opportunity', desc: 'Tomatoes at RWF 900/kg in Kigali. Best time to sell!' },
 ];
 
 function ScoreMeter({ score, color }: { score: number; color: string }) {
@@ -44,6 +43,40 @@ export default function FarmerDashboard() {
           <p className="text-muted-foreground text-xs mt-0.5">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
         </div>
 
+        {/* Quick AI Guide Preview */}
+        <Link to="/dashboard/ai-guidance"
+          className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 rounded-2xl text-white transition-all hover:scale-[1.02] hover:shadow-xl cursor-pointer group block">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                <Sparkles className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg mb-1">AI Farm Guide</h3>
+                <p className="text-emerald-100 text-sm">Get instant farming advice + IP protection tips</p>
+              </div>
+            </div>
+            <ChevronRight className="w-6 h-6 text-white/80 group-hover:text-white transition-colors" />
+          </div>
+        </Link>
+
+        {/* Prominent Club Hub Button */}
+        <Link to="/dashboard/club-hub"
+          className="bg-gradient-to-r from-amber-400 to-amber-500 p-6 rounded-2xl text-white transition-all hover:scale-[1.02] hover:shadow-xl cursor-pointer group block">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                <Users className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg mb-1">Join Club Hub</h3>
+                <p className="text-amber-100 text-sm">Connect with 20+ members & learn IP rights</p>
+              </div>
+            </div>
+            <ChevronRight className="w-6 h-6 text-white/80 group-hover:text-white transition-colors" />
+          </div>
+        </Link>
+
         {alerts.map((a, i) => (
           <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-xl"
             style={{ background: a.color + '10', border: `1px solid ${a.color}25` }}>
@@ -52,31 +85,31 @@ export default function FarmerDashboard() {
           </div>
         ))}
 
-        <div className="glass-card p-5">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold flex items-center gap-2">
-              <Leaf className="w-4 h-4" style={{ color: 'hsl(var(--emerald))' }} />
-              {t('soilIntelligence')}
+              <Leaf className="w-4 h-4 text-emerald-600" />
+              Soil Intelligence
             </h2>
             <div className="flex items-center gap-1.5">
-              <span className="status-dot online" />
-              <span className="text-xs text-muted-foreground">Live</span>
+              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <span className="text-xs text-gray-500">Live</span>
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {soilMetrics.map(m => (
-              <div key={m.label} className="p-4 rounded-xl bg-secondary border border-border">
+              <div key={m.label} className="p-4 rounded-xl bg-gray-50 border border-gray-200">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xl">{m.icon}</span>
-                  <span className="text-sm text-muted-foreground">{m.label}</span>
+                  <span className="text-sm text-gray-600">{m.label}</span>
                 </div>
                 <div className="flex items-end gap-1 mb-1">
-                  <span className="text-3xl font-bold">{m.value}</span>
-                  <span className="text-sm text-muted-foreground mb-1">{m.unit}</span>
+                  <span className="text-3xl font-bold text-gray-900">{m.value}</span>
+                  <span className="text-sm text-gray-500 mb-1">{m.unit}</span>
                 </div>
-                <p className="text-xs text-muted-foreground">{m.tip}</p>
+                <p className="text-xs text-gray-600">{m.tip}</p>
                 <ScoreMeter score={m.score}
-                  color={m.score >= 70 ? 'hsl(var(--emerald))' : m.score >= 50 ? 'hsl(var(--warning))' : 'hsl(var(--alert))'} />
+                  color={m.score >= 70 ? '#10b981' : m.score >= 50 ? '#f59e0b' : '#ef4444'} />
               </div>
             ))}
           </div>
@@ -84,18 +117,18 @@ export default function FarmerDashboard() {
 
         <div>
           <h2 className="font-semibold mb-3 flex items-center gap-2">
-            <Sparkles className="w-4 h-4" style={{ color: 'hsl(var(--emerald))' }} />
-            {t('aiAdvice')}
+            <Sparkles className="w-4 h-4 text-emerald-600" />
+            AI Quick Tips
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {aiAdvice.map((a, i) => (
-              <div key={i} className="glass-card p-4 transition-all hover:scale-[1.01]"
-                style={{ borderLeft: `3px solid hsl(var(--emerald) / ${0.4 + i * 0.1})` }}>
+              <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 transition-all hover:shadow-md hover:scale-[1.01]"
+                style={{ borderLeft: `3px solid #10b981` }}>
                 <div className="flex items-start gap-3">
                   <span className="text-2xl flex-shrink-0">{a.emoji}</span>
                   <div>
-                    <h3 className="font-semibold text-sm">{a.title}</h3>
-                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{a.desc}</p>
+                    <h3 className="font-semibold text-sm text-gray-900">{a.title}</h3>
+                    <p className="text-xs text-gray-600 mt-1 leading-relaxed">{a.desc}</p>
                   </div>
                 </div>
               </div>
@@ -103,22 +136,28 @@ export default function FarmerDashboard() {
           </div>
         </div>
 
-        <Link to="/dashboard/ai-guidance"
-          className="glass-card p-5 flex items-center gap-4 transition-all hover:scale-[1.01] cursor-pointer group block"
-          style={{ border: '1px solid hsl(var(--emerald) / 0.3)' }}>
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-            style={{ background: 'var(--gradient-emerald)' }}>
-            <Sparkles className="w-6 h-6 text-primary-foreground" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold group-hover:text-primary transition-colors">{t('chatWithGuide')}</h3>
-            <p className="text-xs text-muted-foreground">{t('projectCreation')}</p>
-          </div>
-          <ChevronRight className="w-5 h-5 text-muted-foreground" />
-        </Link>
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <Link to="/dashboard/my-projects" className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center transition-all hover:shadow-md hover:scale-[1.01]">
+            <TrendingUp className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
+            <p className="text-xs font-medium text-gray-900">My Projects</p>
+          </Link>
+          <Link to="/dashboard/ip-learning" className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center transition-all hover:shadow-md hover:scale-[1.01]">
+            <Shield className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
+            <p className="text-xs font-medium text-gray-900">IP Learning</p>
+          </Link>
+          <Link to="/dashboard/devices" className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center transition-all hover:shadow-md hover:scale-[1.01]">
+            <Droplets className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
+            <p className="text-xs font-medium text-gray-900">IoT Devices</p>
+          </Link>
+          <Link to="/dashboard/settings" className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center transition-all hover:shadow-md hover:scale-[1.01]">
+            <AlertTriangle className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
+            <p className="text-xs font-medium text-gray-900">Settings</p>
+          </Link>
+        </div>
 
         <div className="text-center pt-2">
-          <p className="text-xs font-medium" style={{ color: 'hsl(var(--emerald))' }}>© 2026 AgriPio Team</p>
+          <p className="text-xs font-medium text-emerald-600">© 2026 AgriPio Team</p>
         </div>
       </div>
     </DashboardLayout>
