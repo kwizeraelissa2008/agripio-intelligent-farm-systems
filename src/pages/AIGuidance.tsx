@@ -286,7 +286,7 @@ export default function AIGuidance() {
               </div>
             </div>
 
-            <p className="text-center text-[10px] text-muted-foreground mt-2">
+            <p className="text-center text-[10px] text-muted-foreground mt-2"> 
               🛡️ AgriGuide integrates IP rights in all advice• © 2026 AgriPio
             </p>
           </>
