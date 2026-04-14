@@ -4,7 +4,7 @@ import { useApp } from '@/contexts/AppContext';
 import { useAuth } from '@/hooks/useAuth';
 import {
   LayoutDashboard, Cpu, Bell, Settings, Globe, LogOut,
-  Sparkles, BookOpen, ChevronDown, Leaf, TrendingUp, Moon, Sun,
+  Sparkles, BookOpen, ChevronDown, Leaf, TrendingUp,
   Users, Shield, Trophy, Info
 } from 'lucide-react';
 import { Language, languageNames, languageFlags, TranslationKey } from '@/lib/translations';
@@ -16,9 +16,6 @@ const navItems: { path: string; icon: React.ElementType; tKey: string; emoji: st
   { path: '/dashboard/ai-guidance',   icon: Sparkles,        tKey: 'navAiGuide',     emoji: '🌟' },
   { path: '/dashboard/my-projects',   icon: TrendingUp,      tKey: 'navMyProjects',  emoji: '📈' },
   { path: '/dashboard/ip-learning',   icon: BookOpen,        tKey: 'navIpLearning',  emoji: '📚' },
-  { path: '/dashboard/club-hub',      icon: Users,           tKey: 'navClubHub',     emoji: '👥' },
-  { path: '/dashboard/pledge-wall',   icon: Shield,          tKey: 'navPledgeWall',  emoji: '🛡️' },
-  { path: '/dashboard/activities',    icon: Trophy,          tKey: 'navActivities',  emoji: '🏆' },
   { path: '/dashboard/devices',       icon: Cpu,             tKey: 'navIot',         emoji: '📡' },
   { path: '/dashboard/settings',      icon: Settings,        tKey: 'navSettings',    emoji: '⚙️' },
   { path: '/dashboard/about',         icon: Info,            tKey: 'navAbout',       emoji: 'ℹ️' },
@@ -165,13 +162,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           )}
 
           <div className="flex items-center gap-1.5">
-            <button onClick={toggleTheme}
-              className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:bg-gray-100">
-              {theme === 'light'
-                ? <Moon className="w-4 h-4 text-gray-400" />
-                : <Sun className="w-4 h-4 text-yellow-500" />}
-            </button>
-
+            
             <div className="relative">
               <button onClick={() => setShowLangPicker(!showLangPicker)}
                 className="px-2.5 py-1.5 rounded-lg text-xs font-semibold border flex items-center gap-1"

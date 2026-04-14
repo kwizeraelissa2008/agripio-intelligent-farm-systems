@@ -63,8 +63,6 @@ export default function FarmerDashboard() {
     { to: '/dashboard/ai-guidance', icon: Sparkles,     label: t('navAiGuide')    },
     { to: '/dashboard/my-projects', icon: TrendingUp,   label: t('navMyProjects') },
     { to: '/dashboard/ip-learning', icon: Shield,       label: t('navIpLearning') },
-    { to: '/dashboard/club-hub',    icon: Users,        label: t('navClubHub')    },
-    { to: '/dashboard/marketplace', icon: ShoppingCart, label: t('navMarket')     },
     { to: '/dashboard/devices',     icon: Cpu,          label: t('navIot')        },
     { to: '/dashboard/settings',    icon: Settings,     label: t('navSettings')   },
   ];
