@@ -115,7 +115,12 @@ export default function Auth() {
           </div>
         </div>
 
-        <p className="text-center text-xs text-muted-foreground mt-6">© 2026 AgriPio Team</p>
+        <div className="text-center mt-6 space-y-0.5">
+          <p className="text-[11px] text-muted-foreground">
+            © 2026 AgriPio Team &nbsp;|&nbsp; Rwanda IP Law No. 31/2009
+          </p>
+          <p className="text-[10px] text-muted-foreground/60">ARIPO Member State &nbsp;|&nbsp; All rights reserved</p>
+        </div>
       </div>
     </div>
   );

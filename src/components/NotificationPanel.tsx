@@ -62,7 +62,6 @@ export default function NotificationPanel({ onClose }: NotificationPanelProps) {
       <div className="overflow-y-auto" style={{ maxHeight: 'calc(70vh - 56px)' }}>
         {notifications.length === 0 ? (
           <div className="py-12 text-center text-muted-foreground text-sm">
-            <Bell className="w-8 h-8 mx-auto mb-3 opacity-30" />
             No notifications
           </div>
         ) : (

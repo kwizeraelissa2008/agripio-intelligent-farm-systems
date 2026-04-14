@@ -1,126 +1,245 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useApp } from '@/contexts/AppContext';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Droplets, Sparkles, AlertTriangle, ChevronRight, Leaf } from 'lucide-react';
+import {
+  Sparkles, ChevronRight, Shield, TrendingUp, Users,
+  ShoppingCart, Cpu, Settings, BookOpen, X, Lightbulb,
+  Droplets, Thermometer, FlaskConical
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { getTodaysLesson, hasSeenTodaysLesson, markLessonSeen } from '@/lib/ipDailyLessons';
 
-const soilMetrics = [
-  { label: 'Moisture Level', value: '68', unit: '%', score: 68, icon: '💧', tip: 'Adequate for most crops. Monitor during dry spells.' },
-  { label: 'pH Level', value: '6.2', unit: 'pH', score: 78, icon: '🌱', tip: 'Slightly acidic — ideal for maize, beans, coffee.' },
-];
+import { getProgress } from '@/lib/localStorage';
 
-const alerts = [
-  { message: 'Nitrogen low — apply 40kg/ha compost this week.', icon: AlertTriangle, color: 'hsl(var(--warning))' },
-  { message: 'Heavy rainfall expected tomorrow. Delay fertilizer.', icon: Droplets, color: 'hsl(var(--sky))' },
-];
+interface IoTReading { soil_moisture: number | null; temperature: number | null; ph_level: number | null; recorded_at: string; }
 
-const aiAdvice = [
-  { emoji: '🌾', title: 'Plant maize + beans together', desc: 'Intercropping increases yield by 25%.' },
-  { emoji: '💧', title: 'Mulch your root zones', desc: 'Dry period expected in 5 days. Mulching retains moisture.' },
-  { emoji: '🧪', title: 'Apply organic compost', desc: 'Nitrogen at 45 mg/kg is below ideal. Split 20kg now + 20kg in 2 weeks.' },
-  { emoji: '🛡️', title: 'Protect your innovation!', desc: 'Got a unique farming method? Ask AgriGuide about IP rights!' },
-  { emoji: '📈', title: 'Market opportunity', desc: 'Tomatoes at RWF 900/kg in Kigali. Best time to sell!' },
-];
-
-function ScoreMeter({ score, color }: { score: number; color: string }) {
-  return (
-    <div className="w-full h-2 rounded-full overflow-hidden bg-secondary mt-2">
-      <div className="h-full rounded-full transition-all duration-700" style={{ width: `${score}%`, background: color }} />
-    </div>
-  );
-}
+const MODULES = ['copyright', 'related_rights', 'creative_economy', 'respect_ip'];
 
 export default function FarmerDashboard() {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const { t } = useApp();
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const greeting = hour < 12 ? t('goodMorning') : hour < 17 ? t('goodAfternoon') : t('goodEvening');
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  const [showTipPopup, setShowTipPopup] = useState(false);
+  const [iotReading, setIotReading] = useState<IoTReading | null>(null);
+  const [completedModules, setCompletedModules] = useState<string[]>([]);
+
+  // Daily tip — show once per day
+  useEffect(() => {
+    if (!hasSeenTodaysLesson()) {
+      const timer = setTimeout(() => setShowTipPopup(true), 800);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  // Fetch latest IoT reading
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('device_data').select('moisture, temperature, ph, recorded_at')
+      .eq('user_id', user.id).order('recorded_at', { ascending: false }).limit(1)
+      .then(({ data }) => {
+        if (data?.[0]) {
+          setIotReading({ soil_moisture: data[0].moisture, temperature: data[0].temperature, ph_level: data[0].ph, recorded_at: data[0].recorded_at });
+        }
+      });
+  }, [user]);
+
+  // Load learning progress from localStorage
+  useEffect(() => {
+    if (user) setCompletedModules(getProgress(user.id));
+  }, [user]);
+
+  const todayTip = t(`ipTip${new Date().getDay() % 8}` as any);
+  const dailyLesson = getTodaysLesson();
+  const learningPct = Math.round((completedModules.length / MODULES.length) * 100);
+
+  const dismissTip = () => { markLessonSeen(); setShowTipPopup(false); };
+
+  const quickActions = [
+    { to: '/dashboard/ai-guidance', icon: Sparkles,     label: t('navAiGuide')    },
+    { to: '/dashboard/my-projects', icon: TrendingUp,   label: t('navMyProjects') },
+    { to: '/dashboard/ip-learning', icon: Shield,       label: t('navIpLearning') },
+    { to: '/dashboard/devices',     icon: Cpu,          label: t('navIot')        },
+    { to: '/dashboard/settings',    icon: Settings,     label: t('navSettings')   },
+  ];
+
+  const aiTips = [
+    { emoji: '🌾', title: t('tip1Title'), desc: t('tip1Desc') },
+    { emoji: '💧', title: t('tip2Title'), desc: t('tip2Desc') },
+    { emoji: '🧪', title: t('tip3Title'), desc: t('tip3Desc') },
+    { emoji: '🛡️', title: t('tip4Title'), desc: t('tip4Desc') },
+  ];
 
   return (
     <DashboardLayout>
-      <div className="space-y-5 animate-fade-in pb-24">
+      <div className="space-y-5 animate-fade-in pb-24 max-w-2xl mx-auto w-full">
+
+        {/* Greeting */}
         <div>
-          <h1 className="text-xl font-bold">{greeting}, {profile?.display_name?.split(' ')[0] || 'Farmer'} 👋</h1>
-          <p className="text-muted-foreground text-xs mt-0.5">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+          <h1 className="text-xl font-bold text-gray-900">
+            {greeting}, {profile?.display_name?.split(' ')[0] || t('farmer')} 👋
+          </h1>
+          <p className="text-sm text-gray-400 mt-0.5">{today}</p>
         </div>
 
-        {alerts.map((a, i) => (
-          <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-xl"
-            style={{ background: a.color + '10', border: `1px solid ${a.color}25` }}>
-            <a.icon className="w-4 h-4 flex-shrink-0" style={{ color: a.color }} />
-            <span className="text-sm flex-1">{a.message}</span>
+        {/* Daily IP Tip card */}
+        <div className="rounded-2xl p-4 flex items-start gap-3"
+          style={{ background: 'hsl(var(--gold) / 0.08)', borderLeft: '4px solid hsl(var(--gold))' }}>
+          <Lightbulb className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'hsl(var(--gold))' }} />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'hsl(var(--gold))' }}>
+              {t('dailyIpTip')}
+            </p>
+            <p className="text-sm leading-relaxed text-gray-700">{todayTip}</p>
           </div>
-        ))}
+          <Link to="/dashboard/ip-learning"
+            className="text-xs font-semibold flex-shrink-0 px-3 py-1.5 rounded-lg"
+            style={{ color: 'hsl(var(--gold))', background: 'hsl(var(--gold) / 0.12)' }}>
+            Learn →
+          </Link>
+        </div>
 
-        <div className="glass-card p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold flex items-center gap-2">
-              <Leaf className="w-4 h-4" style={{ color: 'hsl(var(--emerald))' }} />
-              {t('soilIntelligence')}
-            </h2>
-            <div className="flex items-center gap-1.5">
-              <span className="status-dot online" />
-              <span className="text-xs text-muted-foreground">Live</span>
+        {/* Farm Snapshot */}
+        <div className="glass-card p-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">{t('farmSnapshot')}</p>
+            <Link to="/dashboard/devices" className="text-xs" style={{ color: 'hsl(var(--emerald))' }}>{t('viewAll')}</Link>
+          </div>
+          {iotReading ? (
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { icon: Droplets,     label: t('sensorMoisture'), value: iotReading.soil_moisture != null ? `${iotReading.soil_moisture}%` : '—', ok: iotReading.soil_moisture != null && iotReading.soil_moisture >= 40 && iotReading.soil_moisture <= 70 },
+                { icon: Thermometer,  label: t('sensorTemp'),     value: iotReading.temperature != null ? `${iotReading.temperature}°C` : '—', ok: iotReading.temperature != null && iotReading.temperature >= 18 && iotReading.temperature <= 28 },
+                { icon: FlaskConical, label: t('sensorPh'),       value: iotReading.ph_level != null ? `${iotReading.ph_level}` : '—', ok: iotReading.ph_level != null && iotReading.ph_level >= 5.5 && iotReading.ph_level <= 7.0 },
+              ].map(({ icon: Icon, label, value, ok }) => (
+                <div key={label} className="rounded-xl p-3 text-center" style={{ background: 'hsl(var(--secondary))' }}>
+                  <Icon className="w-4 h-4 mx-auto mb-1" style={{ color: ok ? 'hsl(var(--emerald))' : 'hsl(var(--warning))' }} />
+                  <p className="text-xs text-gray-500">{label}</p>
+                  <p className="text-sm font-bold">{value}</p>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                    style={{ background: ok ? 'hsl(var(--emerald) / 0.1)' : 'hsl(var(--warning) / 0.1)', color: ok ? 'hsl(var(--emerald))' : 'hsl(var(--warning))' }}>
+                    {ok ? t('sensorGood') : t('sensorCheck')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-sm text-gray-400">{t('noSensorConnected')}</p>
+              <Link to="/dashboard/devices" className="text-xs mt-1 block" style={{ color: 'hsl(var(--emerald))' }}>{t('connectIotDevice')}</Link>
+            </div>
+          )}
+        </div>
+
+        {/* Learning Progress */}
+        <div className="glass-card p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4" style={{ color: 'hsl(var(--emerald))' }} />
+              <p className="text-sm font-semibold">{t('ipLearningTitle')}</p>
+            </div>
+            <span className="text-xs font-bold" style={{ color: 'hsl(var(--emerald))' }}>
+              {completedModules.length}/{MODULES.length} modules
+            </span>
+          </div>
+          <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
+            <div className="h-full rounded-full transition-all duration-700"
+              style={{ width: `${learningPct}%`, background: 'var(--gradient-emerald)' }} />
+          </div>
+          {completedModules.length < MODULES.length && (
+            <Link to="/dashboard/ip-learning" className="text-xs mt-2 block" style={{ color: 'hsl(var(--emerald))' }}>
+              {t('continueLearnig')}
+            </Link>
+          )}
+        </div>
+
+        {/* AI Farmer Guide hero card */}
+        <Link to="/dashboard/ai-guidance"
+          className="block rounded-2xl p-5 text-white transition-all hover:scale-[1.01] hover:shadow-2xl group"
+          style={{ background: 'linear-gradient(135deg, #1b3a2a 0%, #2d5a3d 55%, #3d8b40 100%)' }}>
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center"
+                style={{ background: 'rgba(255,255,255,0.12)' }}>
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#81c784' }}>
+                  {t('aiPowered')}
+                </p>
+                <h2 className="text-base font-bold leading-tight">{t('aiFarmerGuide')}</h2>
+                <p className="text-xs mt-0.5" style={{ color: '#c8e6c9' }}>{t('aiFarmerGuideDesc')}</p>
+              </div>
+            </div>
+            <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 group-hover:translate-x-1 transition-transform"
+              style={{ background: 'rgba(255,255,255,0.2)' }}>
+              <ChevronRight className="w-4 h-4 text-white" />
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {soilMetrics.map(m => (
-              <div key={m.label} className="p-4 rounded-xl bg-secondary border border-border">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xl">{m.icon}</span>
-                  <span className="text-sm text-muted-foreground">{m.label}</span>
-                </div>
-                <div className="flex items-end gap-1 mb-1">
-                  <span className="text-3xl font-bold">{m.value}</span>
-                  <span className="text-sm text-muted-foreground mb-1">{m.unit}</span>
-                </div>
-                <p className="text-xs text-muted-foreground">{m.tip}</p>
-                <ScoreMeter score={m.score}
-                  color={m.score >= 70 ? 'hsl(var(--emerald))' : m.score >= 50 ? 'hsl(var(--warning))' : 'hsl(var(--alert))'} />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h2 className="font-semibold mb-3 flex items-center gap-2">
-            <Sparkles className="w-4 h-4" style={{ color: 'hsl(var(--emerald))' }} />
-            {t('aiAdvice')}
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {aiAdvice.map((a, i) => (
-              <div key={i} className="glass-card p-4 transition-all hover:scale-[1.01]"
-                style={{ borderLeft: `3px solid hsl(var(--emerald) / ${0.4 + i * 0.1})` }}>
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl flex-shrink-0">{a.emoji}</span>
-                  <div>
-                    <h3 className="font-semibold text-sm">{a.title}</h3>
-                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{a.desc}</p>
-                  </div>
+          <div className="grid grid-cols-2 gap-2">
+            {aiTips.map((tip, i) => (
+              <div key={i} className="rounded-xl px-3 py-2.5 flex items-start gap-2"
+                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <span className="text-sm flex-shrink-0 mt-0.5">{tip.emoji}</span>
+                <div>
+                  <p className="text-xs font-semibold leading-tight">{tip.title}</p>
+                  <p className="text-[11px] mt-0.5 leading-relaxed" style={{ color: '#a5d6a7' }}>{tip.desc}</p>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-
-        <Link to="/dashboard/ai-guidance"
-          className="glass-card p-5 flex items-center gap-4 transition-all hover:scale-[1.01] cursor-pointer group block"
-          style={{ border: '1px solid hsl(var(--emerald) / 0.3)' }}>
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-            style={{ background: 'var(--gradient-emerald)' }}>
-            <Sparkles className="w-6 h-6 text-primary-foreground" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold group-hover:text-primary transition-colors">{t('chatWithGuide')}</h3>
-            <p className="text-xs text-muted-foreground">{t('projectCreation')}</p>
-          </div>
-          <ChevronRight className="w-5 h-5 text-muted-foreground" />
         </Link>
 
-        <div className="text-center pt-2">
-          <p className="text-xs font-medium" style={{ color: 'hsl(var(--emerald))' }}>© 2026 AgriPio Team</p>
+        {/* Quick Actions */}
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">{t('quickActions')}</p>
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-2.5">
+            {quickActions.map(({ to, icon: Icon, label }) => (
+              <Link key={to} to={to}
+                className="flex flex-col items-center gap-2 py-3 px-2 rounded-2xl bg-white border border-gray-100
+                           shadow-sm transition-all hover:shadow-md hover:border-green-200 hover:-translate-y-0.5">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: '#eaf2ed' }}>
+                  <Icon className="w-4 h-4" style={{ color: '#1b3a2a' }} />
+                </div>
+                <span className="text-[10px] font-medium text-gray-600 text-center leading-tight">{label}</span>
+              </Link>
+            ))}
+          </div>
         </div>
+
       </div>
+
+      {/* Daily IP Tip Popup */}
+      {showTipPopup && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40"
+          onClick={dismissTip}>
+          <div className="w-full max-w-sm rounded-2xl p-6 animate-slide-up"
+            style={{ background: '#fff', border: '2px solid hsl(var(--gold) / 0.4)' }}
+            onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{dailyLesson.icon}</span>
+                <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'hsl(var(--gold))' }}>
+                  {t('dailyIpTip')}
+                </p>
+              </div>
+              <button onClick={dismissTip} className="w-7 h-7 rounded-full flex items-center justify-center bg-gray-100">
+                <X className="w-4 h-4 text-gray-500" />
+              </button>
+            </div>
+            <h3 className="font-bold mb-2">{dailyLesson.titleEn}</h3>
+            <p className="text-sm text-gray-600 leading-relaxed mb-4">{dailyLesson.bodyEn}</p>
+            <button onClick={dismissTip} className="w-full py-2.5 rounded-xl text-sm font-semibold text-white"
+              style={{ background: '#1b3a2a' }}>
+              {t('gotIt')}
+            </button>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
