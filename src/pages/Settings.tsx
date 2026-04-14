@@ -17,7 +17,6 @@ export default function SettingsPage() {
   const tabs = [
     { id: 'general', label: t('general'), icon: SettingsIcon },
     { id: 'team', label: t('team'), icon: Users },
-    { id: 'about', label: t('about'), icon: BookOpen },
   ] as const;
 
   const handleSignOut = async () => {
@@ -61,27 +60,7 @@ export default function SettingsPage() {
             )}
 
             {/* Theme */}
-            <div className="glass-card p-5">
-              <h2 className="font-semibold mb-4 flex items-center gap-2">
-                {theme === 'light' ? <Sun className="w-4 h-4" style={{ color: 'hsl(var(--gold))' }} /> : <Moon className="w-4 h-4" style={{ color: 'hsl(var(--sky))' }} />}
-                {t('theme')}
-              </h2>
-              <div className="flex gap-3">
-                {[
-                  { mode: 'light' as const, label: t('lightMode'), desc: t('sunnyFarmLook') },
-                  { mode: 'dark' as const,  label: t('darkMode'),  desc: t('easyOnEyes') },
-                ].map(tm => (
-                  <button key={tm.mode} onClick={toggleTheme}
-                    className="flex-1 p-4 rounded-xl text-sm font-medium transition-all text-left"
-                    style={theme === tm.mode
-                      ? { background: 'hsl(var(--emerald) / 0.15)', color: 'hsl(var(--emerald))', border: '1px solid hsl(var(--emerald) / 0.3)' }
-                      : { background: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))' }}>
-                    <div className="text-lg mb-1">{tm.label}</div>
-                    <div className="text-xs text-muted-foreground">{tm.desc}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
+            
 
             {/* Language */}
             <div className="glass-card p-5">
@@ -118,28 +97,11 @@ export default function SettingsPage() {
             <p className="text-base font-semibold" style={{ color: 'hsl(var(--emerald))' }}>
               IP Club from Ecole Des Sciences Byimana.
             </p>
-            <p className="text-sm text-muted-foreground mt-3">
-              KWIZERA Elissa, INEZA Elyon Ivo, INEZA Aliza, ISHIMWE Ornella
-            </p>
+            
           </div>
         )}
 
-        {activeTab === 'about' && (
-          <div className="glass-card p-6">
-            <div className="text-center mb-4">
-              <div className="text-4xl mb-2">🌱</div>
-              <h2 className="text-xl font-bold">AgriPio</h2>
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed text-center">
-              {language === 'rw'
-                ? 'AgriPio ni app n\'igikoresho cy\'abahinzi b\'u Rwanda, gifite igenzura ry\'ubutaka (ubuhehere/pH), ubuyobozi bwa AI n\'inama za IP, gukurikirana umushinga, IoT/Bluetooth — byose bikoreshwa na Lovable AI.'
-                : 'AgriPio is a smart app and device for Rwandan farmers, featuring soil monitoring (moisture/pH), AI guidance with IP advice, project tracking, Bluetooth/IoT integration for plant analysis and Arduino data flow—all powered by Lovable AI for agriculture innovation.'}
-            </p>
-            <div className="text-center mt-6">
-              <p className="text-xs font-medium" style={{ color: 'hsl(var(--emerald))' }}>© 2026 AgriPio Team</p>
-            </div>
-          </div>
-        )}
+        
       </div>
     </DashboardLayout>
   );

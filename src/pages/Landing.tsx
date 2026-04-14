@@ -7,19 +7,14 @@ export default function Landing() {
   const { user } = useAuth();
 
   return (
-    <div className="h-screen flex flex-col justify-between bg-gradient-to-br from-emerald-50 via-white to-amber-50">
+    <div className="h-screen flex flex-col justify-between bg-gradient-to-br bg-green-95 via-white to-amber-50">
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center text-center px-4">
         {/* Glowing Logo */}
         <div className="relative mb-8">
           <div className="absolute inset-0 w-24 h-24 md:w-32 md:h-32 bg-emerald-400 rounded-full blur-3xl opacity-30 animate-pulse"></div>
-          <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-2xl flex items-center justify-center"
-               style={{ 
-                 background: 'linear-gradient(135deg, #10b981, #059669)',
-                 boxShadow: '0 0 40px rgba(16, 185, 129, 0.4), 0 0 80px rgba(16, 185, 129, 0.2)'
-               }}>
-            <Leaf className="w-10 h-10 md:w-12 md:h-12 text-white" />
-          </div>
+          
+            <img src="favicon.ico" className="w-41 h-40"/>
         </div>
 
         {/* Glowing Title */}
@@ -62,7 +57,7 @@ export default function Landing() {
       {/* Footer */}
       <footer className="text-center py-5 border-t border-emerald-100">
         <p className="text-[11px] text-gray-400">
-          © 2026 AgriPio Team &nbsp;|&nbsp; Protected under Rwanda IP Law No. 31/2009 &nbsp;|&nbsp; ARIPO Member State
+          © 2026 AgriPio Team &nbsp;|&nbsp; Protected
         </p>
         <p className="text-[10px] text-gray-300 mt-0.5">
           Source code, UI design, educational content &amp; AI persona are original creative works

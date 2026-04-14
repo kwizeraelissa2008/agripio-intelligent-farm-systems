@@ -18,7 +18,6 @@ const navItems: { path: string; icon: React.ElementType; tKey: string; emoji: st
   { path: '/dashboard/ip-learning',   icon: BookOpen,        tKey: 'navIpLearning',  emoji: '📚' },
   { path: '/dashboard/devices',       icon: Cpu,             tKey: 'navIot',         emoji: '📡' },
   { path: '/dashboard/settings',      icon: Settings,        tKey: 'navSettings',    emoji: '⚙️' },
-  { path: '/dashboard/about',         icon: Info,            tKey: 'navAbout',       emoji: 'ℹ️' },
 ];
 
 const allLanguages: Language[] = ['en', 'rw', 'fr', 'sw', 'lg', 'zu'];

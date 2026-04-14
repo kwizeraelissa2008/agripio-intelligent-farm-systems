@@ -166,7 +166,7 @@ export default function AIGuidance() {
               <h1 className="text-xl font-bold">{t('chatWithGuide')}</h1>
               <div className="flex items-center gap-2">
                 <span className="status-dot online" />
-                <span className="text-xs text-muted-foreground">Powered by Lovable AI</span>
+                <span className="text-xs text-muted-foreground">This AI uses data from the device and this can help you to understand how to protect your work(more on copyright and related rights)</span>
               </div>
             </div>
           </div>
@@ -287,7 +287,7 @@ export default function AIGuidance() {
             </div>
 
             <p className="text-center text-[10px] text-muted-foreground mt-2">
-              🛡️ AgriGuide integrates IP rights in all advice • Powered by Lovable AI • © 2026 AgriPio
+              🛡️ AgriGuide integrates IP rights in all advice• © 2026 AgriPio
             </p>
           </>
         )}
