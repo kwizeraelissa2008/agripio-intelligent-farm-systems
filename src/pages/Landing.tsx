@@ -60,8 +60,13 @@ export default function Landing() {
       </main>
 
       {/* Footer */}
-      <footer className="text-center py-6 border-t border-emerald-100">
-        <p className="text-sm text-gray-500">©2026 AgriPio Team</p>
+      <footer className="text-center py-5 border-t border-emerald-100">
+        <p className="text-[11px] text-gray-400">
+          © 2026 AgriPio Team &nbsp;|&nbsp; Protected under Rwanda IP Law No. 31/2009 &nbsp;|&nbsp; ARIPO Member State
+        </p>
+        <p className="text-[10px] text-gray-300 mt-0.5">
+          Source code, UI design, educational content &amp; AI persona are original creative works
+        </p>
       </footer>
 
       {/* Custom styles for glow animation */}

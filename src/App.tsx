@@ -4,7 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppProvider } from "@/contexts/AppContext";
+import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/hooks/useAuth";
+import EULAModal from "@/components/EULAModal";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
@@ -21,19 +23,49 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const EULA_KEY = (uid: string) => `agripio_eula_accepted_${uid}`;
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
+  const { language } = useApp();
+
   if (loading) return (
     <div className="h-screen flex items-center justify-center bg-background">
       <div className="text-center">
-        <div className="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center animate-pulse" style={{ background: 'var(--gradient-emerald)' }}>
+        <div className="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center animate-pulse"
+          style={{ background: 'var(--gradient-emerald)' }}>
           <span className="text-white text-lg">🌱</span>
         </div>
         <p className="text-sm text-muted-foreground">Loading...</p>
       </div>
     </div>
   );
+
   if (!user) return <Navigate to="/auth" />;
+
+  // Check EULA acceptance
+  const eulaAccepted = localStorage.getItem(EULA_KEY(user.id)) === 'true';
+
+  if (!eulaAccepted) {
+    return (
+      <>
+        {children}
+        <EULAModal
+          language={language}
+          onAccept={() => {
+            localStorage.setItem(EULA_KEY(user.id), 'true');
+            // force re-render by reloading — simplest reliable approach
+            window.location.reload();
+          }}
+          onReject={async () => {
+            localStorage.removeItem(EULA_KEY(user.id));
+            await signOut();
+          }}
+        />
+      </>
+    );
+  }
+
   return <>{children}</>;
 }
 
@@ -48,7 +80,10 @@ function AppRoutes() {
       <Route path="/dashboard/my-projects" element={<ProtectedRoute><MyProjects /></ProtectedRoute>} />
       <Route path="/dashboard/devices" element={<ProtectedRoute><IoTDevices /></ProtectedRoute>} />
       <Route path="/dashboard/ip-learning" element={<ProtectedRoute><IPLearning /></ProtectedRoute>} />
-            <Route path="/dashboard/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+     
+      
+      
+      <Route path="/dashboard/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/dashboard/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
       <Route path="/dashboard/registration" element={<ProtectedRoute><RegistrationGuide /></ProtectedRoute>} />
       <Route path="/dashboard/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />

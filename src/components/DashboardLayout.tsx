@@ -56,9 +56,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-2.5 px-5 h-16 border-b flex-shrink-0"
             style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
             <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.15)' }}>
-              <Leaf className="w-4 h-4 text-white" />
+              <img src="/favicon.ico "  />
             </div>
-            <span className="font-bold text-sm tracking-widest text-white">✓ AGRIPIO</span>
+            <span className="font-bold text-sm tracking-widest text-white"> AGRIPIO</span>
           </div>
 
           {/* Nav */}
@@ -221,6 +221,16 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <main className="flex-1 overflow-auto p-4 md:p-6">
           {children}
         </main>
+
+        {/* Copyright footer — visible on desktop, hidden on mobile (bottom nav takes that space) */}
+        {!isMobile && (
+          <footer className="flex-shrink-0 px-6 py-2.5 border-t text-center"
+            style={{ borderColor: '#e6efe6', background: '#fff' }}>
+            <p className="text-[11px] text-gray-400">
+              © 2026 AgriPio Team &nbsp;|&nbsp; Protected under Rwanda IP Law No. 31/2009 &nbsp;|&nbsp; ARIPO Member State
+            </p>
+          </footer>
+        )}
 
         {/* Mobile bottom nav */}
         {isMobile && (
